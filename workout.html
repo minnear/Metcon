@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Workout Tracker</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-bg: #1e1e24;
+            --text-primary: #f4f4f6;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --border: #2e2e38;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 20px 16px 120px 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+
+        /* Top App Navigation */
+        .app-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Quote Banner */
+        .quote-card {
+            background: linear-gradient(135deg, #1e1e24, #2a2a35);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quote-text {
+            font-size: 0.95rem;
+            font-style: italic;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .quote-author {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Biometrics Box */
+        .biometrics-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .biometrics-grid {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .bio-input-group {
+            flex: 1;
+        }
+
+        .bio-input-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .bio-input-group input {
+            width: 100%;
+            background: #121214;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            padding: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .save-bio-btn {
+            margin-top: 10px;
+            width: 100%;
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Workout Selector Grid */
+        .select-workout-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .routine-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .routine-card:active {
+            border-color: var(--accent);
+        }
+
+        .routine-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .routine-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .start-btn-icon {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* Active Workout View Header */
+        .active-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .active-title h2 {
+            font-size: 1.1rem;
+        }
+
+        .active-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .summary-toggle-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .finish-workout-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .cancel-workout-btn {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .card-group {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* Exercise Item Card (Set-by-Set) */
+        .exercise-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .exercise-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .exercise-name {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .set-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .target-note {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .set-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: #121214;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            padding: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .accept-set-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        /* Completed Sets List per Exercise */
+        .completed-sets-container {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .completed-set-item {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .completed-set-item strong {
+            color: var(--text-primary);
+        }
+
+        /* Live Summary Screen Overlay */
+        #summaryWorkspace {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .summary-header h2 {
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        .back-to-workout-btn {
+            background: var(--border);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .summary-exercise-block {
+            margin-bottom: 14px;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 10px;
+        }
+
+        .summary-exercise-block h4 {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        /* History & Trends Views */
+        .history-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .history-routine {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .history-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .history-exercise-row {
+            font-size: 0.85rem;
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-primary);
+        }
+
+        .history-exercise-row span {
+            color: var(--text-secondary);
+        }
+
+        .empty-history {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 30px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        /* Chart Canvas Container */
+        .chart-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 160px !important;
+        }
+
+        /* Sticky Timer Bar Enhancements */
+        .timer-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(18, 18, 20, 0.96);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 1000;
+        }
+
+        .timer-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-display {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--accent);
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .timer-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .timer-btn-secondary {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .timer-select {
+            background: #121214;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Workout Tracker</h1>
+        <p>Log sessions and monitor your progress</p>
+    </header>
+
+    <!-- App Navigation Tabs -->
+    <div class="app-nav">
+        <button class="nav-btn active" id="navWorkouts" onclick="switchView('workouts')">Workouts</button>
+        <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
+    </div>
+
+    <!-- WORKOUT SELECTOR & DASHBOARD VIEW -->
+    <div id="viewWorkouts" class="view-section active">
+        
+        <div id="workoutSelector">
+            <div class="quote-card">
+                <div id="quoteText" class="quote-text">"The body achieves what the mind believes."</div>
+                <div id="quoteAuthor" class="quote-author">— Napoleon Hill</div>
+            </div>
+
+            <div class="biometrics-card">
+                <div class="section-title" style="margin-bottom: 8px;">Daily Biometrics</div>
+                <div class="biometrics-grid">
+                    <div class="bio-input-group">
+                        <label>Body Weight</label>
+                        <input type="number" id="bioWeightInput" placeholder="e.g. 175 lbs" step="0.1">
+                    </div>
+                    <div class="bio-input-group">
+                        <label>Waist Size</label>
+                        <input type="number" id="bioWaistInput" placeholder="e.g. 32 in" step="0.1">
+                    </div>
+                </div>
+                <button class="save-bio-btn" onclick="saveBiometrics()">Save Today's Measurements</button>
+            </div>
+
+            <div class="section-title">Select Today's Routine</div>
+            <div class="select-workout-grid">
+                <div class="routine-card" onclick="startWorkout('Push')">
+                    <div class="routine-info">
+                        <h3>Push Workout</h3>
+                        <p>Chest, Shoulders, Triceps + Metcon</p>
+                    </div>
+                    <div class="start-btn-icon">➔</div>
+                </div>
+                <div class="routine-card" onclick="startWorkout('Pull')">
+                    <div class="routine-info">
+                        <h3>Pull Workout</h3>
+                        <p>Back, Biceps, Deadlifts + Metcon</p>
+                    </div>
+                    <div class="start-btn-icon">➔</div>
+                </div>
+                <div class="routine-card" onclick="startWorkout('Legs')">
+                    <div class="routine-info">
+                        <h3>Leg Workout</h3>
+                        <p>Squats, Lunges, Calves + Metcon</p>
+                    </div>
+                    <div class="start-btn-icon">➔</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Workout Workspace -->
+        <div id="activeWorkspace" style="display: none;">
+            <div class="active-header">
+                <div class="active-title">
+                    <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Active Session</span>
+                    <h2 id="activeRoutineName">Push Workout</h2>
+                </div>
+                <div class="active-actions">
+                    <button class="summary-toggle-btn" onclick="toggleWorkoutSummary(true)">Summary</button>
+                    <button class="finish-workout-btn" onclick="finishWorkout()">Finish</button>
+                    <button class="cancel-workout-btn" onclick="cancelWorkout()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Live Workout Summary Screen (Toggleable View) -->
+            <div id="summaryWorkspace">
+                <div class="summary-header">
+                    <h2>Workout Progress So Far</h2>
+                    <button class="back-to-workout-btn" onclick="toggleWorkoutSummary(false)">Back to Workout</button>
+                </div>
+                <div id="liveSummaryContent"></div>
+            </div>
+
+            <div id="activeExercisesContainer"></div>
+        </div>
+
+    </div>
+
+    <!-- HISTORY & TRENDS VIEW -->
+    <div id="viewHistory" class="view-section">
+        <div class="chart-container">
+            <h3>Body Weight Trend</h3>
+            <canvas id="weightChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Waist Measurement Trend</h3>
+            <canvas id="waistChart"></canvas>
+        </div>
+
+        <div class="section-title">Past Workout Log</div>
+        <div id="historyContainer"></div>
+    </div>
+
+    <!-- Enhanced Sticky Rest Timer Bar -->
+    <div class="timer-bar">
+        <div class="timer-top-row">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Rest:</span>
+                <select id="timerIntervalSelect" class="timer-select" onchange="changeTimerInterval()">
+                    <option value="60">60s</option>
+                    <option value="90" selected>90s</option>
+                    <option value="120">120s</option>
+                </select>
+            </div>
+            <div id="timerDisplay" class="timer-display">01:30</div>
+            <div class="timer-controls">
+                <button id="timerBtn" class="timer-btn" onclick="toggleTimer()">Start</button>
+                <button class="timer-btn-secondary" onclick="resetTimer()">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quotes = [
+            { text: "The body achieves what the mind believes.", author: "Napoleon Hill" },
+            { text: "Success starts with self-discipline.", author: "Dwayne Johnson" },
+            { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+            { text: "Don't count the days, make the days count.", author: "Muhammad Ali" },
+            { text: "Energy flows where attention goes.", author: "Tony Robbins" }
+        ];
+
+        function loadDailyQuote() {
+            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const quote = quotes[dayOfYear % quotes.length];
+            document.getElementById('quoteText').textContent = `"${quote.text}"`;
+            document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+        }
+        loadDailyQuote();
+
+        const workoutData = {
+            "Push": {
+                warmup: [
+                    { name: "Band Pull-Aparts & Arm Circles", sets: 2, reps: "15", rest: "30s" },
+                    { name: "Incline Push-Up Warm-Up", sets: 2, reps: "12", rest: "45s" }
+                ],
+                main: [
+                    { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s" },
+                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s" },
+                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s" },
+                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s" }
+                ],
+                metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds." }
+            },
+            "Pull": {
+                warmup: [
+                    { name: "Dead Hangs from Pull-Up Bar", sets: 2, reps: "30 Sec", rest: "30s" },
+                    { name: "Cat-Cow & Thread the Needle", sets: 2, reps: "10", rest: "30s" }
+                ],
+                main: [
+                    { name: "Conventional Deadlift", sets: 3, reps: "5", rest: "180s" },
+                    { name: "Weighted Pull-Ups (or Lat Pulldown)", sets: 3, reps: "6-8", rest: "120s" },
+                    { name: "Single-Arm Dumbbell Row", sets: 3, reps: "10/arm", rest: "90s" },
+                    { name: "Barbell Bicep Curl", sets: 3, reps: "10-12", rest: "60s" }
+                ],
+                metcon: { name: "Rowing Machine Intervals (5 Rounds)", sets: 5, reps: "250m Row", rest: "60s", notes: "Goal: Keep split times consistent." }
+            },
+            "Legs": {
+                warmup: [
+                    { name: "Bodyweight Squats & Leg Swings", sets: 2, reps: "15", rest: "30s" },
+                    { name: "Glute Bridges", sets: 2, reps: "15", rest: "30s" }
+                ],
+                main: [
+                    { name: "Barbell Back Squat", sets: 4, reps: "6-8", rest: "150s" },
+                    { name: "Bulgarian Split Squats", sets: 3, reps: "8-10/leg", rest: "90s" },
+                    { name: "Romanian Deadlift (RDL)", sets: 3, reps: "10-12", rest: "90s" },
+                    { name: "Standing Calf Raises", sets: 4, reps: "15", rest: "60s" }
+                ],
+                metcon: { name: "Kettlebell Swings & Burpees (21-15-9)", sets: 1, reps: "For Time", rest: "As Needed", notes: "Complete 21, then 15, then 9 reps." }
+            }
+        };
+
+        let currentActiveRoutine = null;
+        let activeWorkoutState = {}; // Stores progress per exercise: { exerciseName: { currentSet: 1, totalSets: X, completedSets: [{setNum, weight, reps}] } }
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.app-nav button').forEach(el => el.classList.remove('active'));
+
+            if (viewName === 'workouts') {
+                document.getElementById('viewWorkouts').classList.add('active');
+                document.getElementById('navWorkouts').classList.add('active');
+            } else {
+                document.getElementById('viewHistory').classList.add('active');
+                document.getElementById('navHistory').classList.add('active');
+                renderHistoryAndTrends();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function saveBiometrics() {
+            const weightVal = document.getElementById('bioWeightInput').value;
+            const waistVal = document.getElementById('bioWaistInput').value;
+
+            if (!weightVal && !waistVal) {
+                alert("Please enter at least one measurement before saving.");
+                return;
+            }
+
+            const record = {
+                id: Date.now(),
+                dateStr: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                weight: weightVal ? parseFloat(weightVal) : null,
+                waist: waistVal ? parseFloat(waistVal) : null
+            };
+
+            let biometricsHistory = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
+            biometricsHistory.push(record);
+            localStorage.setItem('biometrics_history', JSON.stringify(biometricsHistory));
+
+            alert("Biometrics saved successfully!");
+            document.getElementById('bioWeightInput').value = '';
+            document.getElementById('bioWaistInput').value = '';
+        }
+
+        function startWorkout(routineName) {
+            currentActiveRoutine = routineName;
+            activeWorkoutState = {};
+            document.getElementById('workoutSelector').style.display = 'none';
+            document.getElementById('activeWorkspace').style.display = 'block';
+            document.getElementById('activeRoutineName').textContent = routineName + " Workout";
+            document.getElementById('summaryWorkspace').style.display = 'none';
+
+            renderActiveExercises();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderActiveExercises() {
+            const container = document.getElementById('activeExercisesContainer');
+            const routine = workoutData[currentActiveRoutine];
+
+            let html = `<div class="card-group"><div class="section-title">🔥 Warm-Up</div>`;
+            routine.warmup.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+            html += `</div>`;
+
+            html += `<div class="card-group"><div class="section-title">💪 Main Lifts</div>`;
+            routine.main.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+            html += `</div>`;
+
+            html += `<div class="card-group"><div class="section-title">⚡ Metcon Finisher</div>`;
+            html += generateMetconCardHtml(routine.metcon);
+            html += `</div>`;
+
+            container.innerHTML = html;
+        }
+
+        function generateExerciseCardHtml(ex) {
+            if (!activeWorkoutState[ex.name]) {
+                activeWorkoutState[ex.name] = {
+                    totalSets: ex.sets,
+                    currentSet: 1,
+                    completedSets: [],
+                    targetReps: ex.reps
+                };
+            }
+
+            const state = activeWorkoutState[ex.name];
+            const isFinished = state.currentSet > state.totalSets;
+
+            let html = `
+                <div class="exercise-card" id="card-${CSS.escape(ex.name)}">
+                    <div class="exercise-top-row">
+                        <div class="exercise-name">${ex.name}</div>
+                        <div class="set-badge">${isFinished ? 'Completed' : `Set ${state.currentSet} of ${state.totalSets}`}</div>
+                    </div>
+                    <div class="target-note">Target Reps: ${ex.reps} | Rest: ${ex.rest}</div>
+            `;
+
+            if (!isFinished) {
+                html += `
+                    <div class="set-input-row">
+                        <div class="input-group">
+                            <label>Weight (Set ${state.currentSet})</label>
+                            <input type="text" id="weight-${CSS.escape(ex.name)}" placeholder="e.g. 135 lbs">
+                        </div>
+                        <div class="input-group">
+                            <label>Reps (Set ${state.currentSet})</label>
+                            <input type="text" id="reps-${CSS.escape(ex.name)}" placeholder="e.g. 8">
+                        </div>
+                        <button class="accept-set-btn" onclick="acceptSet('${ex.name}')">✓</button>
+                    </div>
+                `;
+            }
+
+            // Render completed sets list
+            if (state.completedSets.length > 0) {
+                html += `<div class="completed-sets-container">`;
+                state.completedSets.forEach(set => {
+                    html += `
+                        <div class="completed-set-item">
+                            <span>Set ${set.setNum}</span>
+                            <strong>${set.weight} | ${set.reps} reps</strong>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function generateMetconCardHtml(metcon) {
+            if (!activeWorkoutState[metcon.name]) {
+                activeWorkoutState[metcon.name] = { isMetcon: true, result: "" };
+            }
+            const state = activeWorkoutState[metcon.name];
+
+            return `
+                <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
+                    <div class="exercise-name">${metcon.name}</div>
+                    <div class="target-note">Target: ${metcon.reps} | Rest: ${metcon.rest}</div>
+                    <div class="set-input-row">
+                        <div class="input-group">
+                            <label>Log Result / Time</label>
+                            <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. Completed in 4:15" oninput="updateMetconResult('${metcon.name}', this.value)">
+                        </div>
+                    </div>
+                    ${metcon.notes ? `<div class="notes" style="margin-top:8px;">${metcon.notes}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function acceptSet(exerciseName) {
+            const weightInput = document.getElementById(`weight-${CSS.escape(exerciseName)}`);
+            const repsInput = document.getElementById(`reps-${CSS.escape(exerciseName)}`);
+
+            const weight = weightInput.value ? weightInput.value : "N/A";
+            const reps = repsInput.value ? repsInput.value : "N/A";
+
+            const state = activeWorkoutState[exerciseName];
+            state.completedSets.push({
+                setNum: state.currentSet,
+                weight: weight,
+                reps: reps
+            });
+
+            state.currentSet++;
+            renderActiveExercises();
+        }
+
+        function updateMetconResult(name, val) {
+            if (activeWorkoutState[name]) {
+                activeWorkoutState[name].result = val;
+            }
+        }
+
+        function toggleWorkoutSummary(show) {
+            const summaryDiv = document.getElementById('summaryWorkspace');
+            const exercisesContainer = document.getElementById('activeExercisesContainer');
+
+            if (show) {
+                exercisesContainer.style.display = 'none';
+                summaryDiv.style.display = 'block';
+                renderLiveSummaryContent();
+            } else {
+                summaryDiv.style.display = 'none';
+                exercisesContainer.style.display = 'block';
+            }
+        }
+
+        function renderLiveSummaryContent() {
+            const container = document.getElementById('liveSummaryContent');
+            let html = '';
+
+            for (const [name, state] of Object.entries(activeWorkoutState)) {
+                html += `<div class="summary-exercise-block"><h4>${name}</h4>`;
+                if (state.isMetcon) {
+                    html += `<div>Result: ${state.result ? state.result : 'Not logged yet'}</div>`;
+                } else {
+                    if (state.completedSets.length === 0) {
+                        html += `<div style="color:var(--text-secondary); font-size:0.8rem;">No sets completed yet.</div>`;
+                    } else {
+                        state.completedSets.forEach(set => {
+                            html += `<div style="font-size:0.82rem; color:var(--text-secondary);">Set ${set.setNum}: <strong>${set.weight}</strong> — <strong>${set.reps} reps</strong></div>`;
+                        });
+                    }
+                }
+                html += `</div>`;
+            }
+
+            container.innerHTML = html || 'No data logged yet.';
+        }
+
+        function cancelWorkout() {
+            if (confirm("Are you sure you want to cancel this active workout? Logged data will be lost.")) {
+                resetWorkspace();
+            }
+        }
+
+        function finishWorkout() {
+            const exerciseRows = [];
+            for (const [name, state] of Object.entries(activeWorkoutState)) {
+                if (state.isMetcon) {
+                    exerciseRows.push({ name, details: `Result: ${state.result ? state.result : 'Completed'}` });
+                } else {
+                    const setSummaries = state.completedSets.map(s => `S${s.setNum}: ${s.weight}x${s.reps}`).join(' | ');
+                    exerciseRows.push({ name, details: setSummaries ? setSummaries : 'Skipped / No sets' });
+                }
+            }
+
+            const workoutRecord = {
+                id: Date.now(),
+                routine: currentActiveRoutine,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                exercises: exerciseRows
+            };
+
+            let history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            history.unshift(workoutRecord);
+            localStorage.setItem('workout_history', JSON.stringify(history));
+
+            alert("Workout saved successfully!");
+            resetWorkspace();
+            switchView('history');
+        }
+
+        function resetWorkspace() {
+            currentActiveRoutine = null;
+            activeWorkoutState = {};
+            document.getElementById('summaryWorkspace').style.display = 'none';
+            document.getElementById('activeWorkspace').style.display = 'none';
+            document.getElementById('workoutSelector').style.display = 'block';
+        }
+
+        function renderHistoryAndTrends() {
+            const container = document.getElementById('historyContainer');
+            const history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
+
+            drawLineChart('weightChart', biometrics, 'weight', '#3b82f6');
+            drawLineChart('waistChart', biometrics, 'waist', '#10b981');
+
+            if (history.length === 0) {
+                container.innerHTML = `<div class="empty-history">No logged workouts yet. Complete a routine to see your workout history here!</div>`;
+                return;
+            }
+
+            let html = '';
+            history.forEach(item => {
+                html += `
+                    <div class="history-card">
+                        <div class="history-header">
+                            <span class="history-routine">${item.routine} Workout</span>
+                            <span class="history-date">${item.date}</span>
+                        </div>
+                `;
+                item.exercises.forEach(ex => {
+                    html += `
+                        <div class="history-exercise-row">
+                            <strong>${ex.name}</strong>
+                            <span>${ex.details}</span>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function drawLineChart(canvasId, dataArray, propertyKey, lineColor) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.parentElement.clientWidth - 32;
+            canvas.height = 160;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const validData = dataArray.filter(d => d[propertyKey] !== null && !isNaN(d[propertyKey]));
+
+            if (validData.length === 0) {
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '12px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No historical data logged yet', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const values = validData.map(d => d[propertyKey]);
+            const labels = validData.map(d => d.dateStr);
+
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+            const padding = 30;
+            const graphWidth = canvas.width - padding * 2;
+            const graphHeight = canvas.height - padding * 2;
+            const range = maxVal - minVal === 0 ? 1 : maxVal - minVal;
+
+            const points = values.map((val, idx) => {
+                const x = padding + (idx / (values.length - 1 || 1)) * graphWidth;
+                const y = canvas.height - padding - ((val - minVal) / range) * graphHeight;
+                return { x, y, val, label: labels[idx] };
+            });
+
+            ctx.beginPath();
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 2.5;
+            points.forEach((pt, idx) => {
+                if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+
+            points.forEach(pt => {
+                ctx.beginPath();
+                ctx.fillStyle = '#121214';
+                ctx.strokeStyle = lineColor;
+                ctx.lineWidth = 2;
+                ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#f4f4f6';
+                ctx.font = '10px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(pt.val, pt.x, pt.y - 8);
+
+                ctx.fillStyle = '#9ca3af';
+                ctx.fillText(pt.label, pt.x, canvas.height - 8);
+            });
+        }
+
+        let countdown;
+        let selectedInterval = 90;
+        let timeLeft = 90;
+        let isRunning = false;
+
+        function formatTime(seconds) {
+            let mins = Math.floor(seconds / 60);
+            let secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function changeTimerInterval() {
+            const select = document.getElementById('timerIntervalSelect');
+            selectedInterval = parseInt(select.value);
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(countdown);
+            isRunning = false;
+            timeLeft = selectedInterval;
+            document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+            document.getElementById('timerBtn').textContent = "Start";
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timerBtn');
+            const display = document.getElementById('timerDisplay');
+
+            if (isRunning) {
+                clearInterval(countdown);
+                isRunning = false;
+                btn.textContent = "Resume";
+            } else {
+                if (timeLeft <= 0) timeLeft = selectedInterval;
+                isRunning = true;
+                btn.textContent = "Pause";
+
+                countdown = setInterval(() => {
+                    timeLeft--;
+                    display.textContent = formatTime(timeLeft);
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        isRunning = false;
+                        btn.textContent = "Start";
+                        timeLeft = selectedInterval;
+                        display.textContent = formatTime(timeLeft);
+                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                    }
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Workout Tracker</title>
+    
+    <!-- iOS Home Screen Icon Config -->
+    <link rel="apple-touch-icon" href="app-icon.png">
+
     <style>
         :root {
             --bg-color: #121214;
@@ -27,7 +31,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            padding: 20px 16px 120px 16px;
+            padding: 20px 16px 140px 16px;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -49,7 +53,6 @@
             margin-top: 4px;
         }
 
-        /* Top App Navigation */
         .app-nav {
             display: flex;
             gap: 8px;
@@ -93,7 +96,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Quote Banner */
         .quote-card {
             background: linear-gradient(135deg, #1e1e24, #2a2a35);
             border: 1px solid var(--border);
@@ -117,7 +119,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Biometrics Box */
         .biometrics-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -168,7 +169,6 @@
             cursor: pointer;
         }
 
-        /* Workout Selector Grid */
         .select-workout-grid {
             display: flex;
             flex-direction: column;
@@ -215,7 +215,6 @@
             font-size: 1.1rem;
         }
 
-        /* Active Workout View Header */
         .active-header {
             display: flex;
             justify-content: space-between;
@@ -282,7 +281,28 @@
             margin-bottom: 12px;
         }
 
-        /* Exercise Item Card (Set-by-Set) */
+        /* Compact Warmup Card Style */
+        .warmup-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .warmup-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .warmup-target {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
         .exercise-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -353,18 +373,37 @@
             border-color: var(--accent);
         }
 
+        /* Set Action Buttons */
         .accept-set-btn {
             background: var(--success);
             color: white;
             border: none;
-            padding: 9px 16px;
+            padding: 9px 14px;
             border-radius: 8px;
             font-weight: 700;
             font-size: 0.85rem;
             cursor: pointer;
         }
 
-        /* Completed Sets List per Exercise */
+        .trigger-rest-btn {
+            background: #2e2e38;
+            color: #f4f4f6;
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trigger-rest-btn:active {
+            background: var(--accent);
+            color: white;
+        }
+
         .completed-sets-container {
             margin-top: 10px;
             display: flex;
@@ -386,7 +425,6 @@
             color: var(--text-primary);
         }
 
-        /* Live Summary Screen Overlay */
         #summaryWorkspace {
             display: none;
             background: var(--card-bg);
@@ -432,7 +470,6 @@
             margin-bottom: 4px;
         }
 
-        /* History & Trends Views */
         .history-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -480,7 +517,6 @@
             margin-bottom: 20px;
         }
 
-        /* Chart Canvas Container */
         .chart-container {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -502,22 +538,23 @@
             height: 160px !important;
         }
 
-        /* Sticky Timer Bar Enhancements */
+        /* Expanded Sticky Rest Timer Bar */
         .timer-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(18, 18, 20, 0.96);
+            background: rgba(18, 18, 20, 0.98);
             backdrop-filter: blur(12px);
             border-top: 1px solid var(--border);
-            padding: 10px 16px;
+            padding: 14px 18px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             max-width: 600px;
             margin: 0 auto;
             z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
         }
 
         .timer-top-row {
@@ -527,25 +564,25 @@
         }
 
         .timer-display {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 800;
             font-variant-numeric: tabular-nums;
             color: var(--accent);
         }
 
         .timer-controls {
             display: flex;
-            gap: 6px;
+            gap: 8px;
         }
 
         .timer-btn {
             background: var(--accent);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.8rem;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
             cursor: pointer;
         }
 
@@ -553,10 +590,10 @@
             background: #2e2e38;
             color: var(--text-primary);
             border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             cursor: pointer;
         }
 
@@ -565,8 +602,9 @@
             color: var(--text-primary);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 0.8rem;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -577,13 +615,11 @@
         <p>Log sessions and monitor your progress</p>
     </header>
 
-    <!-- App Navigation Tabs -->
     <div class="app-nav">
         <button class="nav-btn active" id="navWorkouts" onclick="switchView('workouts')">Workouts</button>
         <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
     </div>
 
-    <!-- WORKOUT SELECTOR & DASHBOARD VIEW -->
     <div id="viewWorkouts" class="view-section active">
         
         <div id="workoutSelector">
@@ -623,9 +659,9 @@
                     </div>
                     <div class="start-btn-icon">➔</div>
                 </div>
-                <div class="routine-card" onclick="startWorkout('Legs')">
+                <div class="routine-card" onclick="startWorkout('Lower Body')">
                     <div class="routine-info">
-                        <h3>Leg Workout</h3>
+                        <h3>Lower Body Workout</h3>
                         <p>Squats, Lunges, Calves + Metcon</p>
                     </div>
                     <div class="start-btn-icon">➔</div>
@@ -633,7 +669,6 @@
             </div>
         </div>
 
-        <!-- Active Workout Workspace -->
         <div id="activeWorkspace" style="display: none;">
             <div class="active-header">
                 <div class="active-title">
@@ -647,7 +682,6 @@
                 </div>
             </div>
 
-            <!-- Live Workout Summary Screen (Toggleable View) -->
             <div id="summaryWorkspace">
                 <div class="summary-header">
                     <h2>Workout Progress So Far</h2>
@@ -661,7 +695,6 @@
 
     </div>
 
-    <!-- HISTORY & TRENDS VIEW -->
     <div id="viewHistory" class="view-section">
         <div class="chart-container">
             <h3>Body Weight Trend</h3>
@@ -676,15 +709,15 @@
         <div id="historyContainer"></div>
     </div>
 
-    <!-- Enhanced Sticky Rest Timer Bar -->
     <div class="timer-bar">
         <div class="timer-top-row">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Rest:</span>
+                <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Rest:</span>
                 <select id="timerIntervalSelect" class="timer-select" onchange="changeTimerInterval()">
                     <option value="60">60s</option>
                     <option value="90" selected>90s</option>
                     <option value="120">120s</option>
+                    <option value="180">180s</option>
                 </select>
             </div>
             <div id="timerDisplay" class="timer-display">01:30</div>
@@ -704,58 +737,83 @@
             { text: "Energy flows where attention goes.", author: "Tony Robbins" }
         ];
 
-        function loadDailyQuote() {
-            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-            const quote = quotes[dayOfYear % quotes.length];
+        function loadRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[randomIndex];
             document.getElementById('quoteText').textContent = `"${quote.text}"`;
             document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
         }
-        loadDailyQuote();
+        loadRandomQuote();
 
         const workoutData = {
             "Push": {
                 warmup: [
-                    { name: "Band Pull-Aparts & Arm Circles", sets: 2, reps: "15", rest: "30s" },
-                    { name: "Incline Push-Up Warm-Up", sets: 2, reps: "12", rest: "45s" }
+                    { name: "Band Pull-Aparts & Arm Circles", reps: "15 reps x 2" },
+                    { name: "Incline Push-Up Warm-Up", reps: "12 reps x 2" }
                 ],
-                main: [
-                    { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s" },
-                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s" },
-                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s" },
-                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s" }
+                primary: { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", defaultLoad: "135 lbs" },
+                secondary: [
+                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95 lbs" },
+                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50 lbs" },
+                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35 lbs" }
                 ],
                 metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds." }
             },
             "Pull": {
                 warmup: [
-                    { name: "Dead Hangs from Pull-Up Bar", sets: 2, reps: "30 Sec", rest: "30s" },
-                    { name: "Cat-Cow & Thread the Needle", sets: 2, reps: "10", rest: "30s" }
+                    { name: "Dead Hangs from Pull-Up Bar", reps: "max hold" },
+                    { name: "Cat-Cow & Thread the Needle", reps: "10 reps x 2" }
                 ],
-                main: [
-                    { name: "Conventional Deadlift", sets: 3, reps: "5", rest: "180s" },
-                    { name: "Weighted Pull-Ups (or Lat Pulldown)", sets: 3, reps: "6-8", rest: "120s" },
-                    { name: "Single-Arm Dumbbell Row", sets: 3, reps: "10/arm", rest: "90s" },
-                    { name: "Barbell Bicep Curl", sets: 3, reps: "10-12", rest: "60s" }
+                primary: { name: "Conventional Deadlift", sets: 3, reps: "5", rest: "180s", defaultLoad: "225 lbs" },
+                secondary: [
+                    { name: "Weighted Pull-Ups (or Lat Pulldown)", sets: 3, reps: "6-8", rest: "120s", defaultLoad: "BW" },
+                    { name: "Single-Arm Dumbbell Row", sets: 3, reps: "10/arm", rest: "90s", defaultLoad: "55 lbs" },
+                    { name: "Barbell Bicep Curl", sets: 3, reps: "10-12", rest: "60s", defaultLoad: "65 lbs" }
                 ],
                 metcon: { name: "Rowing Machine Intervals (5 Rounds)", sets: 5, reps: "250m Row", rest: "60s", notes: "Goal: Keep split times consistent." }
             },
-            "Legs": {
+            "Lower Body": {
                 warmup: [
-                    { name: "Bodyweight Squats & Leg Swings", sets: 2, reps: "15", rest: "30s" },
-                    { name: "Glute Bridges", sets: 2, reps: "15", rest: "30s" }
+                    { name: "Rower", reps: "500m" },
+                    { name: "Bear Crawl & Crab Walk", reps: "20 steps forwards and back" },
+                    { name: "Dead Hangs", reps: "max hold" }
                 ],
-                main: [
-                    { name: "Barbell Back Squat", sets: 4, reps: "6-8", rest: "150s" },
-                    { name: "Bulgarian Split Squats", sets: 3, reps: "8-10/leg", rest: "90s" },
-                    { name: "Romanian Deadlift (RDL)", sets: 3, reps: "10-12", rest: "90s" },
-                    { name: "Standing Calf Raises", sets: 4, reps: "15", rest: "60s" }
+                primary: { name: "Belt Squat", sets: 4, reps: "8", rest: "90s", defaultLoad: "80 lbs" },
+                secondary: [
+                    { name: "Pendulum B-side Squat", sets: 3, reps: "10", rest: "60s", defaultLoad: "135 lbs" },
+                    { name: "Single Leg Extension", sets: 3, reps: "10", rest: "60s", defaultLoad: "75 lbs" },
+                    { name: "Single Leg Hamstring Curl", sets: 3, reps: "10", rest: "60s", defaultLoad: "40 lbs" },
+                    { name: "Standing Calf Raises", sets: 2, reps: "30", rest: "90s", defaultLoad: "70 lbs" },
+                    { name: "Hip Adductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110 lbs" },
+                    { name: "Hip Abductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110 lbs" },
+                    { name: "Plank", sets: 3, reps: "max hold", rest: "60s", defaultLoad: "BW" }
                 ],
-                metcon: { name: "Kettlebell Swings & Burpees (21-15-9)", sets: 1, reps: "For Time", rest: "As Needed", notes: "Complete 21, then 15, then 9 reps." }
+                metcon: { 
+                    name: "Sled Push & Pull", 
+                    isSledMetcon: true, 
+                    suggestedPlates: 4, 
+                    suggestedReps: 5, 
+                    rest: "As needed", 
+                    notes: "Complete reps with control." 
+                }
             }
         };
 
         let currentActiveRoutine = null;
-        let activeWorkoutState = {}; // Stores progress per exercise: { exerciseName: { currentSet: 1, totalSets: X, completedSets: [{setNum, weight, reps}] } }
+        let activeWorkoutState = {};
+        let workoutStartTime = null;
+
+        function getStoredWeight(exerciseName, fallback) {
+            const weightsHistory = JSON.parse(localStorage.getItem('exercise_weights') || '{}');
+            return weightsHistory[exerciseName] !== undefined ? weightsHistory[exerciseName] : (fallback || '');
+        }
+
+        function saveStoredWeight(exerciseName, weightVal) {
+            if (!weightVal) return;
+            let weightsHistory = JSON.parse(localStorage.getItem('exercise_weights') || '{}');
+            weightsHistory[exerciseName] = weightVal;
+            localStorage.setItem('exercise_weights', JSON.stringify(weightsHistory));
+        }
 
         function switchView(viewName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -800,6 +858,8 @@
         function startWorkout(routineName) {
             currentActiveRoutine = routineName;
             activeWorkoutState = {};
+            workoutStartTime = Date.now();
+
             document.getElementById('workoutSelector').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'block';
             document.getElementById('activeRoutineName').textContent = routineName + " Workout";
@@ -814,18 +874,39 @@
             const routine = workoutData[currentActiveRoutine];
 
             let html = `<div class="card-group"><div class="section-title">🔥 Warm-Up</div>`;
-            routine.warmup.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+            routine.warmup.forEach((ex) => { 
+                html += `
+                    <div class="warmup-card">
+                        <span class="warmup-title">${ex.name}</span>
+                        <span class="warmup-target">${ex.reps}</span>
+                    </div>
+                `; 
+            });
             html += `</div>`;
 
-            html += `<div class="card-group"><div class="section-title">💪 Main Lifts</div>`;
-            routine.main.forEach((ex) => { html += generateExerciseCardHtml(ex); });
-            html += `</div>`;
+            if (routine.primary) {
+                html += `<div class="card-group"><div class="section-title">🎯 Primary Movement</div>`;
+                html += generateExerciseCardHtml(routine.primary);
+                html += `</div>`;
+            }
 
-            html += `<div class="card-group"><div class="section-title">⚡ Metcon Finisher</div>`;
+            if (routine.secondary && routine.secondary.length > 0) {
+                html += `<div class="card-group"><div class="section-title">⚡ Secondary Movements</div>`;
+                routine.secondary.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+                html += `</div>`;
+            }
+
+            html += `<div class="card-group"><div class="section-title">🏃 Metabolic Conditioning</div>`;
             html += generateMetconCardHtml(routine.metcon);
             html += `</div>`;
 
             container.innerHTML = html;
+        }
+
+        function parseRestSeconds(restStr) {
+            if (!restStr) return 90;
+            const parsed = parseInt(restStr);
+            return isNaN(parsed) ? 90 : parsed;
         }
 
         function generateExerciseCardHtml(ex) {
@@ -840,6 +921,8 @@
 
             const state = activeWorkoutState[ex.name];
             const isFinished = state.currentSet > state.totalSets;
+            const currentWeight = getStoredWeight(ex.name, ex.defaultLoad);
+            const restSeconds = parseRestSeconds(ex.rest);
 
             let html = `
                 <div class="exercise-card" id="card-${CSS.escape(ex.name)}">
@@ -854,19 +937,19 @@
                 html += `
                     <div class="set-input-row">
                         <div class="input-group">
-                            <label>Weight (Set ${state.currentSet})</label>
-                            <input type="text" id="weight-${CSS.escape(ex.name)}" placeholder="e.g. 135 lbs">
+                            <label>Weight / Load</label>
+                            <input type="text" id="weight-${CSS.escape(ex.name)}" value="${currentWeight}">
                         </div>
                         <div class="input-group">
-                            <label>Reps (Set ${state.currentSet})</label>
-                            <input type="text" id="reps-${CSS.escape(ex.name)}" placeholder="e.g. 8">
+                            <label>Reps</label>
+                            <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
                         </div>
-                        <button class="accept-set-btn" onclick="acceptSet('${ex.name}')">✓</button>
+                        <button class="accept-set-btn" onclick="acceptSet('${ex.name}')" title="Log Set">✓</button>
+                        <button class="trigger-rest-btn" onclick="startRestForExercise(${restSeconds})" title="Start ${restSeconds}s Rest">💤</button>
                     </div>
                 `;
             }
 
-            // Render completed sets list
             if (state.completedSets.length > 0) {
                 html += `<div class="completed-sets-container">`;
                 state.completedSets.forEach(set => {
@@ -886,9 +969,34 @@
 
         function generateMetconCardHtml(metcon) {
             if (!activeWorkoutState[metcon.name]) {
-                activeWorkoutState[metcon.name] = { isMetcon: true, result: "" };
+                activeWorkoutState[metcon.name] = { 
+                    isMetcon: true, 
+                    plates: metcon.suggestedPlates || "", 
+                    reps: metcon.suggestedReps || "", 
+                    result: "" 
+                };
             }
             const state = activeWorkoutState[metcon.name];
+
+            if (metcon.isSledMetcon) {
+                return `
+                    <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
+                        <div class="exercise-name">${metcon.name}</div>
+                        <div class="target-note">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps | Rest: ${metcon.rest}</div>
+                        <div class="set-input-row">
+                            <div class="input-group">
+                                <label>Number of Plates</label>
+                                <input type="number" id="sled-plates-${CSS.escape(metcon.name)}" value="${state.plates}" placeholder="e.g. 4" oninput="updateSledMetcon('${metcon.name}')">
+                            </div>
+                            <div class="input-group">
+                                <label>Number of Reps</label>
+                                <input type="number" id="sled-reps-${CSS.escape(metcon.name)}" value="${state.reps}" placeholder="e.g. 5" oninput="updateSledMetcon('${metcon.name}')">
+                            </div>
+                        </div>
+                        ${metcon.notes ? `<div class="target-note" style="margin-top:8px;">${metcon.notes}</div>` : ''}
+                    </div>
+                `;
+            }
 
             return `
                 <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
@@ -900,7 +1008,7 @@
                             <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. Completed in 4:15" oninput="updateMetconResult('${metcon.name}', this.value)">
                         </div>
                     </div>
-                    ${metcon.notes ? `<div class="notes" style="margin-top:8px;">${metcon.notes}</div>` : ''}
+                    ${metcon.notes ? `<div class="target-note" style="margin-top:8px;">${metcon.notes}</div>` : ''}
                 </div>
             `;
         }
@@ -911,6 +1019,8 @@
 
             const weight = weightInput.value ? weightInput.value : "N/A";
             const reps = repsInput.value ? repsInput.value : "N/A";
+
+            saveStoredWeight(exerciseName, weight);
 
             const state = activeWorkoutState[exerciseName];
             state.completedSets.push({
@@ -926,6 +1036,16 @@
         function updateMetconResult(name, val) {
             if (activeWorkoutState[name]) {
                 activeWorkoutState[name].result = val;
+            }
+        }
+
+        function updateSledMetcon(name) {
+            const platesVal = document.getElementById(`sled-plates-${CSS.escape(name)}`).value;
+            const repsVal = document.getElementById(`sled-reps-${CSS.escape(name)}`).value;
+            if (activeWorkoutState[name]) {
+                activeWorkoutState[name].plates = platesVal;
+                activeWorkoutState[name].reps = repsVal;
+                activeWorkoutState[name].result = `${platesVal || 0} Plates x ${repsVal || 0} Reps`;
             }
         }
 
@@ -973,6 +1093,9 @@
         }
 
         function finishWorkout() {
+            const durationMs = Date.now() - (workoutStartTime || Date.now());
+            const durationMins = Math.max(1, Math.round(durationMs / 60000));
+
             const exerciseRows = [];
             for (const [name, state] of Object.entries(activeWorkoutState)) {
                 if (state.isMetcon) {
@@ -986,6 +1109,7 @@
             const workoutRecord = {
                 id: Date.now(),
                 routine: currentActiveRoutine,
+                duration: `${durationMins} min${durationMins > 1 ? 's' : ''}`,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 exercises: exerciseRows
             };
@@ -994,7 +1118,7 @@
             history.unshift(workoutRecord);
             localStorage.setItem('workout_history', JSON.stringify(history));
 
-            alert("Workout saved successfully!");
+            alert(`Workout completed in ${workoutRecord.duration}! Saved successfully.`);
             resetWorkspace();
             switchView('history');
         }
@@ -1002,6 +1126,7 @@
         function resetWorkspace() {
             currentActiveRoutine = null;
             activeWorkoutState = {};
+            workoutStartTime = null;
             document.getElementById('summaryWorkspace').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'none';
             document.getElementById('workoutSelector').style.display = 'block';
@@ -1022,11 +1147,12 @@
 
             let html = '';
             history.forEach(item => {
+                const durationBadge = item.duration ? ` • ⏱️ ${item.duration}` : '';
                 html += `
                     <div class="history-card">
                         <div class="history-header">
                             <span class="history-routine">${item.routine} Workout</span>
-                            <span class="history-date">${item.date}</span>
+                            <span class="history-date">${item.date}${durationBadge}</span>
                         </div>
                 `;
                 item.exercises.forEach(ex => {
@@ -1129,6 +1255,36 @@
             timeLeft = selectedInterval;
             document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
             document.getElementById('timerBtn').textContent = "Start";
+        }
+
+        function startRestForExercise(seconds) {
+            const select = document.getElementById('timerIntervalSelect');
+            if (select) select.value = seconds.toString();
+            selectedInterval = seconds;
+            
+            clearInterval(countdown);
+            timeLeft = seconds;
+            isRunning = true;
+            
+            const btn = document.getElementById('timerBtn');
+            const display = document.getElementById('timerDisplay');
+            
+            btn.textContent = "Pause";
+            display.textContent = formatTime(timeLeft);
+
+            countdown = setInterval(() => {
+                timeLeft--;
+                display.textContent = formatTime(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    isRunning = false;
+                    btn.textContent = "Start";
+                    timeLeft = selectedInterval;
+                    display.textContent = formatTime(timeLeft);
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                }
+            }, 1000);
         }
 
         function toggleTimer() {

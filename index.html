@@ -83,14 +83,14 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* Top Rest Timer Bar */
-        .timer-bar-top {
-            display: none;
+        /* Rest Timer Bar (Positioned inside Active Workspace) */
+        .timer-bar-inline {
             background: var(--card-bg);
             border: 1px solid var(--accent);
             border-radius: 12px;
             padding: 12px 16px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
@@ -98,7 +98,7 @@
         }
 
         /* Flashing Animation when Rest Timer Expires */
-        .timer-bar-top.flash-active {
+        .timer-bar-inline.flash-active {
             animation: timerFlash 0.5s ease-in-out 3;
         }
 
@@ -124,7 +124,7 @@
             color: var(--accent);
         }
 
-        .timer-bar-top.flash-active .timer-display-top {
+        .timer-bar-inline.flash-active .timer-display-top {
             color: #ffffff;
         }
 
@@ -153,16 +153,6 @@
             font-weight: 600;
             font-size: 0.8rem;
             cursor: pointer;
-        }
-
-        .timer-select {
-            background: #121214;
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
         }
 
         .view-section {
@@ -411,12 +401,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .exercise-name {
             font-size: 1rem;
             font-weight: 600;
+        }
+
+        .exercise-badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
         }
 
         .set-badge {
@@ -434,10 +430,13 @@
             color: var(--success);
         }
 
-        .target-note {
-            font-size: 0.75rem;
+        .rest-badge {
+            background: #2e2e38;
             color: var(--text-secondary);
-            margin-bottom: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
         }
 
         .set-input-row {
@@ -666,24 +665,6 @@
         <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
     </div>
 
-    <!-- Top Rest Timer Bar (Only visible during active workout) -->
-    <div id="topRestTimer" class="timer-bar-top">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Rest Timer:</span>
-            <select id="timerIntervalSelect" class="timer-select" onchange="changeTimerInterval()">
-                <option value="60">60s</option>
-                <option value="90" selected>90s</option>
-                <option value="120">120s</option>
-                <option value="180">180s</option>
-            </select>
-        </div>
-        <div id="timerDisplay" class="timer-display-top">01:30</div>
-        <div class="timer-controls">
-            <button id="timerBtn" class="timer-btn" onclick="toggleTimer()">Start</button>
-            <button class="timer-btn-secondary" onclick="resetTimer()">Reset</button>
-        </div>
-    </div>
-
     <div id="viewWorkouts" class="view-section active">
         
         <div id="workoutSelector">
@@ -734,6 +715,7 @@
         </div>
 
         <div id="activeWorkspace" style="display: none;">
+            
             <div class="active-header">
                 <div class="active-title">
                     <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Active Session</span>
@@ -744,6 +726,18 @@
                     <button class="summary-toggle-btn" onclick="toggleWorkoutSummary(true)">Summary</button>
                     <button class="finish-workout-btn" onclick="finishWorkout()">Finish</button>
                     <button class="cancel-workout-btn" onclick="cancelWorkout()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Rest Timer Bar -->
+            <div id="inlineRestTimer" class="timer-bar-inline">
+                <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">
+                    Rest Timer
+                </div>
+                <div id="timerDisplay" class="timer-display-top">01:30</div>
+                <div class="timer-controls">
+                    <button id="timerBtn" class="timer-btn" onclick="toggleTimer()">Start</button>
+                    <button class="timer-btn-secondary" onclick="resetTimer()">Reset</button>
                 </div>
             </div>
 
@@ -797,11 +791,11 @@
                     { name: "Band Pull-Aparts & Arm Circles", reps: "15 reps x 2" },
                     { name: "Incline Push-Up Warm-Up", reps: "12 reps x 2" }
                 ],
-                primary: { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", defaultLoad: "135", unit: "lbs" },
+                primary: { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", defaultLoad: "135", unit: "lbs", inputType: "Reps" },
                 secondary: [
-                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95", unit: "lbs" },
-                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs" },
-                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35", unit: "lbs" }
+                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95", unit: "lbs", inputType: "Reps" },
+                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
+                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35", unit: "lbs", inputType: "Reps" }
                 ],
                 metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds." }
             },
@@ -811,15 +805,15 @@
                     { name: "Bear Crawl & Crab Walk", reps: "20 steps forwards and back" },
                     { name: "Dead Hangs", reps: "max hold" }
                 ],
-                primary: { name: "Hammer Strength Pulldown", sets: 4, reps: "8", rest: "90s", defaultLoad: "55", unit: "lbs" },
+                primary: { name: "Hammer Strength Pulldown", sets: 4, reps: "8", rest: "90s", defaultLoad: "55", unit: "lbs", inputType: "Reps" },
                 secondary: [
-                    { name: "Cable Row", sets: 3, reps: "12", rest: "90s", defaultLoad: "70", unit: "lbs" },
-                    { name: "Dumbbell High Pull", sets: 3, reps: "8", rest: "60s", defaultLoad: "60", unit: "lbs" },
-                    { name: "Single Arm Barbell Row", sets: 3, reps: "12", rest: "60s", defaultLoad: "30", unit: "lbs" },
-                    { name: "Dumbbell Y-T-W Inclined", sets: 3, reps: "5", rest: "60s", defaultLoad: "5", unit: "lbs" },
-                    { name: "Bicep Cable Curls", sets: 3, reps: "15", rest: "90s", defaultLoad: "20", unit: "lbs" },
-                    { name: "Oblique Twist", sets: 3, reps: "20", rest: "60s", defaultLoad: "50", unit: "lbs" },
-                    { name: "Supermans", sets: 3, reps: "15", rest: "60s", defaultLoad: "BW", unit: "lbs" }
+                    { name: "Cable Row", sets: 3, reps: "12", rest: "90s", defaultLoad: "70", unit: "lbs", inputType: "Reps" },
+                    { name: "Dumbbell High Pull", sets: 3, reps: "8", rest: "60s", defaultLoad: "60", unit: "lbs", inputType: "Reps" },
+                    { name: "Single Arm Barbell Row", sets: 3, reps: "12", rest: "60s", defaultLoad: "30", unit: "lbs", inputType: "Reps" },
+                    { name: "Dumbbell Y-T-W Inclined", sets: 3, reps: "5", rest: "60s", defaultLoad: "5", unit: "lbs", inputType: "Reps" },
+                    { name: "Bicep Cable Curls", sets: 3, reps: "15", rest: "90s", defaultLoad: "20", unit: "lbs", inputType: "Reps" },
+                    { name: "Oblique Twist", sets: 3, reps: "20", rest: "60s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
+                    { name: "Supermans", sets: 3, reps: "15", rest: "60s", defaultLoad: "BW", unit: "lbs", inputType: "Reps" }
                 ],
                 metcon: { 
                     name: "Sandbag Walking Lunges", 
@@ -835,15 +829,15 @@
                     { name: "Bear Crawl & Crab Walk", reps: "20 steps forwards and back" },
                     { name: "Dead Hangs", reps: "max hold" }
                 ],
-                primary: { name: "Belt Squat", sets: 4, reps: "8", rest: "90s", defaultLoad: "80", unit: "lbs" },
+                primary: { name: "Belt Squat", sets: 4, reps: "8", rest: "90s", defaultLoad: "80", unit: "lbs", inputType: "Reps" },
                 secondary: [
-                    { name: "Pendulum B-side Squat", sets: 3, reps: "10", rest: "60s", defaultLoad: "135", unit: "lbs" },
-                    { name: "Single Leg Extension", sets: 3, reps: "10", rest: "60s", defaultLoad: "75", unit: "lbs" },
-                    { name: "Single Leg Hamstring Curl", sets: 3, reps: "10", rest: "60s", defaultLoad: "40", unit: "lbs" },
-                    { name: "Standing Calf Raises", sets: 2, reps: "30", rest: "90s", defaultLoad: "70", unit: "lbs" },
-                    { name: "Hip Adductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110", unit: "lbs" },
-                    { name: "Hip Abductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110", unit: "lbs" },
-                    { name: "Plank", sets: 3, reps: "max hold", rest: "60s", defaultLoad: "BW", unit: "lbs" }
+                    { name: "Pendulum B-side Squat", sets: 3, reps: "10", rest: "60s", defaultLoad: "135", unit: "lbs", inputType: "Reps" },
+                    { name: "Single Leg Extension", sets: 3, reps: "10", rest: "60s", defaultLoad: "75", unit: "lbs", inputType: "Reps" },
+                    { name: "Single Leg Hamstring Curl", sets: 3, reps: "10", rest: "60s", defaultLoad: "40", unit: "lbs", inputType: "Reps" },
+                    { name: "Standing Calf Raises", sets: 2, reps: "30", rest: "90s", defaultLoad: "70", unit: "lbs", inputType: "Reps" },
+                    { name: "Hip Adductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110", unit: "lbs", inputType: "Reps" },
+                    { name: "Hip Abductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110", unit: "lbs", inputType: "Reps" },
+                    { name: "Plank", sets: 3, reps: "max hold", rest: "60s", defaultLoad: "BW", unit: "lbs", inputType: "Time" }
                 ],
                 metcon: { 
                     name: "Sled Push & Pull", 
@@ -886,10 +880,6 @@
                 renderHistoryAndTrends();
             }
 
-            if (!currentActiveRoutine) {
-                document.getElementById('topRestTimer').style.display = 'none';
-            }
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -926,8 +916,6 @@
             clearInterval(runningTimerInterval);
             updateRunningTimerDisplay();
             runningTimerInterval = setInterval(updateRunningTimerDisplay, 1000);
-
-            document.getElementById('topRestTimer').style.display = 'flex';
 
             document.getElementById('workoutSelector').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'block';
@@ -1004,14 +992,17 @@
             const currentWeight = getStoredWeight(ex.name, ex.defaultLoad);
             const restSeconds = parseRestSeconds(ex.rest);
             const unitLabel = ex.unit || 'lbs';
+            const inputLabel = ex.inputType || 'Reps';
 
             let html = `
                 <div class="exercise-card ${isFinished ? 'completed-exercise' : ''}" id="card-${CSS.escape(ex.name)}">
                     <div class="exercise-top-row">
                         <div class="exercise-name">${ex.name}</div>
-                        <div class="set-badge ${isFinished ? 'completed-badge' : ''}">${isFinished ? 'Completed ✓' : `Set ${state.currentSet} of ${state.totalSets}`}</div>
+                        <div class="exercise-badges">
+                            ${ex.rest ? `<div class="rest-badge">⏱️ ${ex.rest}</div>` : ''}
+                            <div class="set-badge ${isFinished ? 'completed-badge' : ''}">${isFinished ? 'Completed ✓' : `Set ${state.currentSet} of ${state.totalSets}`}</div>
+                        </div>
                     </div>
-                    <div class="target-note">Target Reps: ${ex.reps} | Rest: ${ex.rest}</div>
             `;
 
             if (!isFinished) {
@@ -1022,7 +1013,7 @@
                             <input type="text" id="weight-${CSS.escape(ex.name)}" value="${currentWeight}">
                         </div>
                         <div class="input-group">
-                            <label>Reps / Time</label>
+                            <label>${inputLabel}</label>
                             <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
                         </div>
                         <button class="accept-set-btn" onclick="acceptSet('${ex.name}', '${unitLabel}')" title="Log Set">✓</button>
@@ -1038,7 +1029,7 @@
                     html += `
                         <div class="completed-set-item">
                             <span>Set ${set.setNum}</span>
-                            <strong>${weightFormatted} | ${set.reps} reps</strong>
+                            <strong>${weightFormatted} | ${set.reps} ${inputLabel.toLowerCase()}</strong>
                         </div>
                     `;
                 });
@@ -1064,14 +1055,14 @@
                 return `
                     <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
                         <div class="exercise-name">${metcon.name}</div>
-                        <div class="target-note">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps | Rest: ${metcon.rest}</div>
+                        <div class="target-note">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
                         <div class="set-input-row">
                             <div class="input-group">
-                                <label>Number of Plates</label>
+                                <label>Plates</label>
                                 <input type="number" id="sled-plates-${CSS.escape(metcon.name)}" value="${state.plates}" placeholder="e.g. 4" oninput="updateSledMetcon('${metcon.name}')">
                             </div>
                             <div class="input-group">
-                                <label>Number of Reps</label>
+                                <label>Reps</label>
                                 <input type="number" id="sled-reps-${CSS.escape(metcon.name)}" value="${state.reps}" placeholder="e.g. 5" oninput="updateSledMetcon('${metcon.name}')">
                             </div>
                         </div>
@@ -1083,7 +1074,7 @@
             return `
                 <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
                     <div class="exercise-name">${metcon.name}</div>
-                    <div class="target-note">Target: ${metcon.reps} | Rest: ${metcon.rest}</div>
+                    <div class="target-note">Target: ${metcon.reps}</div>
                     <div class="set-input-row">
                         <div class="input-group">
                             <label>Log Result / Time</label>
@@ -1160,7 +1151,7 @@
                     } else {
                         state.completedSets.forEach(set => {
                             const unitStr = isNaN(parseFloat(set.weight)) ? '' : ` ${set.unit || 'lbs'}`;
-                            html += `<div style="font-size:0.82rem; color:var(--text-secondary);">Set ${set.setNum}: <strong>${set.weight}${unitStr}</strong> — <strong>${set.reps} reps</strong></div>`;
+                            html += `<div style="font-size:0.82rem; color:var(--text-secondary);">Set ${set.setNum}: <strong>${set.weight}${unitStr}</strong> — <strong>${set.reps}</strong></div>`;
                         });
                     }
                 }
@@ -1216,8 +1207,6 @@
             workoutStartTime = null;
             clearInterval(runningTimerInterval);
             resetTimer();
-
-            document.getElementById('topRestTimer').style.display = 'none';
 
             document.getElementById('summaryWorkspace').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'none';
@@ -1347,25 +1336,18 @@
             return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
-        function changeTimerInterval() {
-            const select = document.getElementById('timerIntervalSelect');
-            selectedInterval = parseInt(select.value);
-            resetTimer();
-        }
-
         function resetTimer() {
             clearInterval(countdown);
             isRunning = false;
             timeLeft = selectedInterval;
             document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
             document.getElementById('timerBtn').textContent = "Start";
-            document.getElementById('topRestTimer').classList.remove('flash-active');
+            document.getElementById('inlineRestTimer').classList.remove('flash-active');
         }
 
         function triggerTimerAlert() {
-            const timerEl = document.getElementById('topRestTimer');
+            const timerEl = document.getElementById('inlineRestTimer');
             timerEl.classList.remove('flash-active');
-            // Trigger reflow to restart animation if clicked repeatedly
             void timerEl.offsetWidth; 
             timerEl.classList.add('flash-active');
 
@@ -1379,13 +1361,12 @@
         }
 
         function startRestForExercise(seconds) {
-            const select = document.getElementById('timerIntervalSelect');
-            if (select) select.value = seconds.toString();
-            selectedInterval = seconds;
+            const targetSeconds = seconds || 90;
+            selectedInterval = targetSeconds;
             
             clearInterval(countdown);
-            document.getElementById('topRestTimer').classList.remove('flash-active');
-            timeLeft = seconds;
+            document.getElementById('inlineRestTimer').classList.remove('flash-active');
+            timeLeft = targetSeconds;
             isRunning = true;
             
             const btn = document.getElementById('timerBtn');
@@ -1421,7 +1402,7 @@
                 if (timeLeft <= 0) timeLeft = selectedInterval;
                 isRunning = true;
                 btn.textContent = "Pause";
-                document.getElementById('topRestTimer').classList.remove('flash-active');
+                document.getElementById('inlineRestTimer').classList.remove('flash-active');
 
                 countdown = setInterval(() => {
                     timeLeft--;

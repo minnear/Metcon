@@ -18,6 +18,7 @@
             --border: #2e2e38;
             --success: #10b981;
             --danger: #ef4444;
+            --completed-bg: rgba(16, 185, 129, 0.15);
         }
 
         * {
@@ -84,15 +85,36 @@
 
         /* Top Rest Timer Bar */
         .timer-bar-top {
+            display: none;
             background: var(--card-bg);
             border: 1px solid var(--accent);
             border-radius: 12px;
             padding: 12px 16px;
             margin-bottom: 20px;
-            display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* Flashing Animation when Rest Timer Expires */
+        .timer-bar-top.flash-active {
+            animation: timerFlash 0.5s ease-in-out 3;
+        }
+
+        @keyframes timerFlash {
+            0% {
+                background-color: var(--card-bg);
+                border-color: var(--accent);
+            }
+            50% {
+                background-color: var(--accent);
+                border-color: #ffffff;
+            }
+            100% {
+                background-color: var(--card-bg);
+                border-color: var(--accent);
+            }
         }
 
         .timer-display-top {
@@ -100,6 +122,10 @@
             font-weight: 800;
             font-variant-numeric: tabular-nums;
             color: var(--accent);
+        }
+
+        .timer-bar-top.flash-active .timer-display-top {
+            color: #ffffff;
         }
 
         .timer-controls {
@@ -373,6 +399,12 @@
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .exercise-card.completed-exercise {
+            background-color: var(--completed-bg);
+            border-color: var(--success);
         }
 
         .exercise-top-row {
@@ -395,6 +427,11 @@
             padding: 4px 8px;
             border-radius: 6px;
             text-transform: uppercase;
+        }
+
+        .set-badge.completed-badge {
+            background: rgba(16, 185, 129, 0.25);
+            color: var(--success);
         }
 
         .target-note {
@@ -629,8 +666,8 @@
         <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
     </div>
 
-    <!-- Prominent Top Rest Timer Bar -->
-    <div class="timer-bar-top">
+    <!-- Top Rest Timer Bar (Only visible during active workout) -->
+    <div id="topRestTimer" class="timer-bar-top">
         <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Rest Timer:</span>
             <select id="timerIntervalSelect" class="timer-select" onchange="changeTimerInterval()">
@@ -848,6 +885,11 @@
                 document.getElementById('navHistory').classList.add('active');
                 renderHistoryAndTrends();
             }
+
+            if (!currentActiveRoutine) {
+                document.getElementById('topRestTimer').style.display = 'none';
+            }
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -881,10 +923,11 @@
             activeWorkoutState = {};
             workoutStartTime = Date.now();
 
-            // Start running session timer
             clearInterval(runningTimerInterval);
             updateRunningTimerDisplay();
             runningTimerInterval = setInterval(updateRunningTimerDisplay, 1000);
+
+            document.getElementById('topRestTimer').style.display = 'flex';
 
             document.getElementById('workoutSelector').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'block';
@@ -963,10 +1006,10 @@
             const unitLabel = ex.unit || 'lbs';
 
             let html = `
-                <div class="exercise-card" id="card-${CSS.escape(ex.name)}">
+                <div class="exercise-card ${isFinished ? 'completed-exercise' : ''}" id="card-${CSS.escape(ex.name)}">
                     <div class="exercise-top-row">
                         <div class="exercise-name">${ex.name}</div>
-                        <div class="set-badge">${isFinished ? 'Completed' : `Set ${state.currentSet} of ${state.totalSets}`}</div>
+                        <div class="set-badge ${isFinished ? 'completed-badge' : ''}">${isFinished ? 'Completed ✓' : `Set ${state.currentSet} of ${state.totalSets}`}</div>
                     </div>
                     <div class="target-note">Target Reps: ${ex.reps} | Rest: ${ex.rest}</div>
             `;
@@ -1172,6 +1215,10 @@
             activeWorkoutState = {};
             workoutStartTime = null;
             clearInterval(runningTimerInterval);
+            resetTimer();
+
+            document.getElementById('topRestTimer').style.display = 'none';
+
             document.getElementById('summaryWorkspace').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'none';
             document.getElementById('workoutSelector').style.display = 'block';
@@ -1312,6 +1359,23 @@
             timeLeft = selectedInterval;
             document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
             document.getElementById('timerBtn').textContent = "Start";
+            document.getElementById('topRestTimer').classList.remove('flash-active');
+        }
+
+        function triggerTimerAlert() {
+            const timerEl = document.getElementById('topRestTimer');
+            timerEl.classList.remove('flash-active');
+            // Trigger reflow to restart animation if clicked repeatedly
+            void timerEl.offsetWidth; 
+            timerEl.classList.add('flash-active');
+
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+
+            setTimeout(() => {
+                timerEl.classList.remove('flash-active');
+            }, 1500);
         }
 
         function startRestForExercise(seconds) {
@@ -1320,6 +1384,7 @@
             selectedInterval = seconds;
             
             clearInterval(countdown);
+            document.getElementById('topRestTimer').classList.remove('flash-active');
             timeLeft = seconds;
             isRunning = true;
             
@@ -1339,7 +1404,7 @@
                     btn.textContent = "Start";
                     timeLeft = selectedInterval;
                     display.textContent = formatTime(timeLeft);
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                    triggerTimerAlert();
                 }
             }, 1000);
         }
@@ -1356,6 +1421,7 @@
                 if (timeLeft <= 0) timeLeft = selectedInterval;
                 isRunning = true;
                 btn.textContent = "Pause";
+                document.getElementById('topRestTimer').classList.remove('flash-active');
 
                 countdown = setInterval(() => {
                     timeLeft--;
@@ -1367,7 +1433,7 @@
                         btn.textContent = "Start";
                         timeLeft = selectedInterval;
                         display.textContent = formatTime(timeLeft);
-                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                        triggerTimerAlert();
                     }
                 }, 1000);
             }

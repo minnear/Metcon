@@ -31,7 +31,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            padding: 20px 16px 140px 16px;
+            padding: 20px 16px 60px 16px;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -56,7 +56,7 @@
         .app-nav {
             display: flex;
             gap: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             background: var(--card-bg);
             padding: 4px;
             border-radius: 12px;
@@ -80,6 +80,63 @@
             background: var(--accent);
             color: white;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Top Rest Timer Bar */
+        .timer-bar-top {
+            background: var(--card-bg);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .timer-display-top {
+            font-size: 1.6rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: var(--accent);
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .timer-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .timer-btn-secondary {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .timer-select {
+            background: #121214;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
         .view-section {
@@ -230,6 +287,14 @@
             font-size: 1.1rem;
         }
 
+        .running-timer-badge {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 2px;
+            display: block;
+        }
+
         .active-actions {
             display: flex;
             gap: 6px;
@@ -281,7 +346,6 @@
             margin-bottom: 12px;
         }
 
-        /* Compact Warmup Card Style */
         .warmup-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -373,7 +437,6 @@
             border-color: var(--accent);
         }
 
-        /* Set Action Buttons */
         .accept-set-btn {
             background: var(--success);
             color: white;
@@ -476,6 +539,7 @@
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
+            position: relative;
         }
 
         .history-header {
@@ -495,6 +559,20 @@
         .history-date {
             font-size: 0.8rem;
             color: var(--text-secondary);
+        }
+
+        .delete-history-btn {
+            background: transparent;
+            color: var(--danger);
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .delete-history-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
         }
 
         .history-exercise-row {
@@ -537,75 +615,6 @@
             width: 100% !important;
             height: 160px !important;
         }
-
-        /* Expanded Sticky Rest Timer Bar */
-        .timer-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(18, 18, 20, 0.98);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--border);
-            padding: 14px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 600px;
-            margin: 0 auto;
-            z-index: 1000;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-        }
-
-        .timer-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .timer-display {
-            font-size: 1.6rem;
-            font-weight: 800;
-            font-variant-numeric: tabular-nums;
-            color: var(--accent);
-        }
-
-        .timer-controls {
-            display: flex;
-            gap: 8px;
-        }
-
-        .timer-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .timer-btn-secondary {
-            background: #2e2e38;
-            color: var(--text-primary);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .timer-select {
-            background: #121214;
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
@@ -620,6 +629,24 @@
         <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
     </div>
 
+    <!-- Prominent Top Rest Timer Bar -->
+    <div class="timer-bar-top">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Rest Timer:</span>
+            <select id="timerIntervalSelect" class="timer-select" onchange="changeTimerInterval()">
+                <option value="60">60s</option>
+                <option value="90" selected>90s</option>
+                <option value="120">120s</option>
+                <option value="180">180s</option>
+            </select>
+        </div>
+        <div id="timerDisplay" class="timer-display-top">01:30</div>
+        <div class="timer-controls">
+            <button id="timerBtn" class="timer-btn" onclick="toggleTimer()">Start</button>
+            <button class="timer-btn-secondary" onclick="resetTimer()">Reset</button>
+        </div>
+    </div>
+
     <div id="viewWorkouts" class="view-section active">
         
         <div id="workoutSelector">
@@ -632,12 +659,12 @@
                 <div class="section-title" style="margin-bottom: 8px;">Daily Biometrics</div>
                 <div class="biometrics-grid">
                     <div class="bio-input-group">
-                        <label>Body Weight</label>
-                        <input type="number" id="bioWeightInput" placeholder="e.g. 175 lbs" step="0.1">
+                        <label>Body Weight (lbs)</label>
+                        <input type="number" id="bioWeightInput" placeholder="e.g. 175" step="0.1">
                     </div>
                     <div class="bio-input-group">
-                        <label>Waist Size</label>
-                        <input type="number" id="bioWaistInput" placeholder="e.g. 32 in" step="0.1">
+                        <label>Waist Size (in)</label>
+                        <input type="number" id="bioWaistInput" placeholder="e.g. 32" step="0.1">
                     </div>
                 </div>
                 <button class="save-bio-btn" onclick="saveBiometrics()">Save Today's Measurements</button>
@@ -652,10 +679,10 @@
                     </div>
                     <div class="start-btn-icon">➔</div>
                 </div>
-                <div class="routine-card" onclick="startWorkout('Pull')">
+                <div class="routine-card" onclick="startWorkout('Upper Body Pull')">
                     <div class="routine-info">
-                        <h3>Pull Workout</h3>
-                        <p>Back, Biceps, Deadlifts + Metcon</p>
+                        <h3>Upper Body Pull Workout</h3>
+                        <p>Lats, Back, Biceps + Metcon</p>
                     </div>
                     <div class="start-btn-icon">➔</div>
                 </div>
@@ -674,6 +701,7 @@
                 <div class="active-title">
                     <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Active Session</span>
                     <h2 id="activeRoutineName">Push Workout</h2>
+                    <span id="activeRunningTimer" class="running-timer-badge">⏱️ 00:00</span>
                 </div>
                 <div class="active-actions">
                     <button class="summary-toggle-btn" onclick="toggleWorkoutSummary(true)">Summary</button>
@@ -709,25 +737,6 @@
         <div id="historyContainer"></div>
     </div>
 
-    <div class="timer-bar">
-        <div class="timer-top-row">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Rest:</span>
-                <select id="timerIntervalSelect" class="timer-select" onchange="changeTimerInterval()">
-                    <option value="60">60s</option>
-                    <option value="90" selected>90s</option>
-                    <option value="120">120s</option>
-                    <option value="180">180s</option>
-                </select>
-            </div>
-            <div id="timerDisplay" class="timer-display">01:30</div>
-            <div class="timer-controls">
-                <button id="timerBtn" class="timer-btn" onclick="toggleTimer()">Start</button>
-                <button class="timer-btn-secondary" onclick="resetTimer()">Reset</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const quotes = [
             { text: "The body achieves what the mind believes.", author: "Napoleon Hill" },
@@ -751,26 +760,37 @@
                     { name: "Band Pull-Aparts & Arm Circles", reps: "15 reps x 2" },
                     { name: "Incline Push-Up Warm-Up", reps: "12 reps x 2" }
                 ],
-                primary: { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", defaultLoad: "135 lbs" },
+                primary: { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", defaultLoad: "135", unit: "lbs" },
                 secondary: [
-                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95 lbs" },
-                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50 lbs" },
-                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35 lbs" }
+                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95", unit: "lbs" },
+                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs" },
+                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35", unit: "lbs" }
                 ],
                 metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds." }
             },
-            "Pull": {
+            "Upper Body Pull": {
                 warmup: [
-                    { name: "Dead Hangs from Pull-Up Bar", reps: "max hold" },
-                    { name: "Cat-Cow & Thread the Needle", reps: "10 reps x 2" }
+                    { name: "Rower", reps: "500m" },
+                    { name: "Bear Crawl & Crab Walk", reps: "20 steps forwards and back" },
+                    { name: "Dead Hangs", reps: "max hold" }
                 ],
-                primary: { name: "Conventional Deadlift", sets: 3, reps: "5", rest: "180s", defaultLoad: "225 lbs" },
+                primary: { name: "Hammer Strength Pulldown", sets: 4, reps: "8", rest: "90s", defaultLoad: "55", unit: "lbs" },
                 secondary: [
-                    { name: "Weighted Pull-Ups (or Lat Pulldown)", sets: 3, reps: "6-8", rest: "120s", defaultLoad: "BW" },
-                    { name: "Single-Arm Dumbbell Row", sets: 3, reps: "10/arm", rest: "90s", defaultLoad: "55 lbs" },
-                    { name: "Barbell Bicep Curl", sets: 3, reps: "10-12", rest: "60s", defaultLoad: "65 lbs" }
+                    { name: "Cable Row", sets: 3, reps: "12", rest: "90s", defaultLoad: "70", unit: "lbs" },
+                    { name: "Dumbbell High Pull", sets: 3, reps: "8", rest: "60s", defaultLoad: "60", unit: "lbs" },
+                    { name: "Single Arm Barbell Row", sets: 3, reps: "12", rest: "60s", defaultLoad: "30", unit: "lbs" },
+                    { name: "Dumbbell Y-T-W Inclined", sets: 3, reps: "5", rest: "60s", defaultLoad: "5", unit: "lbs" },
+                    { name: "Bicep Cable Curls", sets: 3, reps: "15", rest: "90s", defaultLoad: "20", unit: "lbs" },
+                    { name: "Oblique Twist", sets: 3, reps: "20", rest: "60s", defaultLoad: "50", unit: "lbs" },
+                    { name: "Supermans", sets: 3, reps: "15", rest: "60s", defaultLoad: "BW", unit: "lbs" }
                 ],
-                metcon: { name: "Rowing Machine Intervals (5 Rounds)", sets: 5, reps: "250m Row", rest: "60s", notes: "Goal: Keep split times consistent." }
+                metcon: { 
+                    name: "Sandbag Walking Lunges", 
+                    sets: 1, 
+                    reps: "10 mins", 
+                    rest: "Minimal", 
+                    notes: "Maintain continuous pace with minimal rest." 
+                }
             },
             "Lower Body": {
                 warmup: [
@@ -778,15 +798,15 @@
                     { name: "Bear Crawl & Crab Walk", reps: "20 steps forwards and back" },
                     { name: "Dead Hangs", reps: "max hold" }
                 ],
-                primary: { name: "Belt Squat", sets: 4, reps: "8", rest: "90s", defaultLoad: "80 lbs" },
+                primary: { name: "Belt Squat", sets: 4, reps: "8", rest: "90s", defaultLoad: "80", unit: "lbs" },
                 secondary: [
-                    { name: "Pendulum B-side Squat", sets: 3, reps: "10", rest: "60s", defaultLoad: "135 lbs" },
-                    { name: "Single Leg Extension", sets: 3, reps: "10", rest: "60s", defaultLoad: "75 lbs" },
-                    { name: "Single Leg Hamstring Curl", sets: 3, reps: "10", rest: "60s", defaultLoad: "40 lbs" },
-                    { name: "Standing Calf Raises", sets: 2, reps: "30", rest: "90s", defaultLoad: "70 lbs" },
-                    { name: "Hip Adductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110 lbs" },
-                    { name: "Hip Abductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110 lbs" },
-                    { name: "Plank", sets: 3, reps: "max hold", rest: "60s", defaultLoad: "BW" }
+                    { name: "Pendulum B-side Squat", sets: 3, reps: "10", rest: "60s", defaultLoad: "135", unit: "lbs" },
+                    { name: "Single Leg Extension", sets: 3, reps: "10", rest: "60s", defaultLoad: "75", unit: "lbs" },
+                    { name: "Single Leg Hamstring Curl", sets: 3, reps: "10", rest: "60s", defaultLoad: "40", unit: "lbs" },
+                    { name: "Standing Calf Raises", sets: 2, reps: "30", rest: "90s", defaultLoad: "70", unit: "lbs" },
+                    { name: "Hip Adductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110", unit: "lbs" },
+                    { name: "Hip Abductor", sets: 3, reps: "15", rest: "60s", defaultLoad: "110", unit: "lbs" },
+                    { name: "Plank", sets: 3, reps: "max hold", rest: "60s", defaultLoad: "BW", unit: "lbs" }
                 ],
                 metcon: { 
                     name: "Sled Push & Pull", 
@@ -802,6 +822,7 @@
         let currentActiveRoutine = null;
         let activeWorkoutState = {};
         let workoutStartTime = null;
+        let runningTimerInterval = null;
 
         function getStoredWeight(exerciseName, fallback) {
             const weightsHistory = JSON.parse(localStorage.getItem('exercise_weights') || '{}');
@@ -860,6 +881,11 @@
             activeWorkoutState = {};
             workoutStartTime = Date.now();
 
+            // Start running session timer
+            clearInterval(runningTimerInterval);
+            updateRunningTimerDisplay();
+            runningTimerInterval = setInterval(updateRunningTimerDisplay, 1000);
+
             document.getElementById('workoutSelector').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'block';
             document.getElementById('activeRoutineName').textContent = routineName + " Workout";
@@ -867,6 +893,16 @@
 
             renderActiveExercises();
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateRunningTimerDisplay() {
+            if (!workoutStartTime) return;
+            const elapsedSecs = Math.floor((Date.now() - workoutStartTime) / 1000);
+            const mins = Math.floor(elapsedSecs / 60);
+            const secs = elapsedSecs % 60;
+            const formatted = `⏱️ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const badge = document.getElementById('activeRunningTimer');
+            if (badge) badge.textContent = formatted;
         }
 
         function renderActiveExercises() {
@@ -915,7 +951,8 @@
                     totalSets: ex.sets,
                     currentSet: 1,
                     completedSets: [],
-                    targetReps: ex.reps
+                    targetReps: ex.reps,
+                    unit: ex.unit || 'lbs'
                 };
             }
 
@@ -923,6 +960,7 @@
             const isFinished = state.currentSet > state.totalSets;
             const currentWeight = getStoredWeight(ex.name, ex.defaultLoad);
             const restSeconds = parseRestSeconds(ex.rest);
+            const unitLabel = ex.unit || 'lbs';
 
             let html = `
                 <div class="exercise-card" id="card-${CSS.escape(ex.name)}">
@@ -937,14 +975,14 @@
                 html += `
                     <div class="set-input-row">
                         <div class="input-group">
-                            <label>Weight / Load</label>
+                            <label>Load (${unitLabel})</label>
                             <input type="text" id="weight-${CSS.escape(ex.name)}" value="${currentWeight}">
                         </div>
                         <div class="input-group">
-                            <label>Reps</label>
+                            <label>Reps / Time</label>
                             <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
                         </div>
-                        <button class="accept-set-btn" onclick="acceptSet('${ex.name}')" title="Log Set">✓</button>
+                        <button class="accept-set-btn" onclick="acceptSet('${ex.name}', '${unitLabel}')" title="Log Set">✓</button>
                         <button class="trigger-rest-btn" onclick="startRestForExercise(${restSeconds})" title="Start ${restSeconds}s Rest">💤</button>
                     </div>
                 `;
@@ -953,10 +991,11 @@
             if (state.completedSets.length > 0) {
                 html += `<div class="completed-sets-container">`;
                 state.completedSets.forEach(set => {
+                    const weightFormatted = isNaN(parseFloat(set.weight)) ? set.weight : `${set.weight} ${unitLabel}`;
                     html += `
                         <div class="completed-set-item">
                             <span>Set ${set.setNum}</span>
-                            <strong>${set.weight} | ${set.reps} reps</strong>
+                            <strong>${weightFormatted} | ${set.reps} reps</strong>
                         </div>
                     `;
                 });
@@ -1005,7 +1044,7 @@
                     <div class="set-input-row">
                         <div class="input-group">
                             <label>Log Result / Time</label>
-                            <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. Completed in 4:15" oninput="updateMetconResult('${metcon.name}', this.value)">
+                            <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. 10 mins continuous" oninput="updateMetconResult('${metcon.name}', this.value)">
                         </div>
                     </div>
                     ${metcon.notes ? `<div class="target-note" style="margin-top:8px;">${metcon.notes}</div>` : ''}
@@ -1013,7 +1052,7 @@
             `;
         }
 
-        function acceptSet(exerciseName) {
+        function acceptSet(exerciseName, unitLabel) {
             const weightInput = document.getElementById(`weight-${CSS.escape(exerciseName)}`);
             const repsInput = document.getElementById(`reps-${CSS.escape(exerciseName)}`);
 
@@ -1026,7 +1065,8 @@
             state.completedSets.push({
                 setNum: state.currentSet,
                 weight: weight,
-                reps: reps
+                reps: reps,
+                unit: unitLabel
             });
 
             state.currentSet++;
@@ -1076,7 +1116,8 @@
                         html += `<div style="color:var(--text-secondary); font-size:0.8rem;">No sets completed yet.</div>`;
                     } else {
                         state.completedSets.forEach(set => {
-                            html += `<div style="font-size:0.82rem; color:var(--text-secondary);">Set ${set.setNum}: <strong>${set.weight}</strong> — <strong>${set.reps} reps</strong></div>`;
+                            const unitStr = isNaN(parseFloat(set.weight)) ? '' : ` ${set.unit || 'lbs'}`;
+                            html += `<div style="font-size:0.82rem; color:var(--text-secondary);">Set ${set.setNum}: <strong>${set.weight}${unitStr}</strong> — <strong>${set.reps} reps</strong></div>`;
                         });
                     }
                 }
@@ -1101,7 +1142,10 @@
                 if (state.isMetcon) {
                     exerciseRows.push({ name, details: `Result: ${state.result ? state.result : 'Completed'}` });
                 } else {
-                    const setSummaries = state.completedSets.map(s => `S${s.setNum}: ${s.weight}x${s.reps}`).join(' | ');
+                    const setSummaries = state.completedSets.map(s => {
+                        const unitStr = isNaN(parseFloat(s.weight)) ? '' : ` ${s.unit || 'lbs'}`;
+                        return `S${s.setNum}: ${s.weight}${unitStr} x ${s.reps}`;
+                    }).join(' | ');
                     exerciseRows.push({ name, details: setSummaries ? setSummaries : 'Skipped / No sets' });
                 }
             }
@@ -1127,9 +1171,19 @@
             currentActiveRoutine = null;
             activeWorkoutState = {};
             workoutStartTime = null;
+            clearInterval(runningTimerInterval);
             document.getElementById('summaryWorkspace').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'none';
             document.getElementById('workoutSelector').style.display = 'block';
+        }
+
+        function deleteWorkoutRecord(id) {
+            if (confirm("Are you sure you want to delete this workout from your history?")) {
+                let history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+                history = history.filter(item => item.id !== id);
+                localStorage.setItem('workout_history', JSON.stringify(history));
+                renderHistoryAndTrends();
+            }
         }
 
         function renderHistoryAndTrends() {
@@ -1151,8 +1205,11 @@
                 html += `
                     <div class="history-card">
                         <div class="history-header">
-                            <span class="history-routine">${item.routine} Workout</span>
-                            <span class="history-date">${item.date}${durationBadge}</span>
+                            <div>
+                                <span class="history-routine">${item.routine} Workout</span>
+                                <div class="history-date">${item.date}${durationBadge}</div>
+                            </div>
+                            <button class="delete-history-btn" onclick="deleteWorkoutRecord(${item.id})" title="Delete Workout">🗑️</button>
                         </div>
                 `;
                 item.exercises.forEach(ex => {

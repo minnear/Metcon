@@ -388,7 +388,7 @@
         .exercise-card.completed-exercise {
             background-color: var(--completed-bg);
             border-color: var(--success);
-            order: 99; /* Moves completed exercises to bottom */
+            order: 99; /* Moves completed exercise to bottom */
         }
 
         .exercise-top-row {
@@ -407,7 +407,7 @@
             display: flex;
             gap: 6px;
             align-items: center;
-            white-space: nowrap; /* Prevents wrapping */
+            white-space: nowrap;
         }
 
         .set-badge {
@@ -418,7 +418,7 @@
             padding: 4px 8px;
             border-radius: 6px;
             text-transform: uppercase;
-            white-space: nowrap; /* Strict no-wrap rule */
+            white-space: nowrap;
         }
 
         .set-badge.completed-badge {
@@ -496,7 +496,6 @@
             transition: all 0.2s ease;
         }
 
-        /* 1-second pulse animation when timer is running */
         .trigger-rest-btn.rest-btn-pulsing {
             animation: restPulse 1s infinite alternate;
         }
@@ -527,7 +526,7 @@
             color: var(--text-primary);
         }
 
-        /* Calorie Calculator Card Styles */
+        /* Calorie Calculator Styles */
         .calc-result-box {
             background: linear-gradient(135deg, #1e1e24, #2a2a38);
             border: 1px solid var(--accent);
@@ -559,6 +558,78 @@
             background: rgba(0,0,0,0.2);
             padding: 8px 12px;
             border-radius: 6px;
+        }
+
+        .food-log-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .food-input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .food-input-row input {
+            flex: 1;
+            background: #121214;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .food-input-row button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .daily-calorie-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid var(--accent);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        .food-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .food-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .food-item-row button {
+            background: transparent;
+            color: var(--danger);
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 2px 6px;
         }
 
         .history-card {
@@ -767,6 +838,17 @@
                     </select>
                 </div>
                 <div class="bio-input-group">
+                    <label>Activity Level</label>
+                    <select id="calcActivity">
+                        <option value="sedentary">Sedentary (Little/no exercise)</option>
+                        <option value="light" selected>Light Active (1-3 days/wk)</option>
+                        <option value="moderate">Moderate Active (3-5 days/wk)</option>
+                        <option value="heavy">Very Active (6-7 days/wk)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="biometrics-grid" style="margin-top: 10px;">
+                <div class="bio-input-group">
                     <label>Lean Mass (lbs - Optional)</label>
                     <input type="number" id="calcLeanMass" placeholder="e.g. 140" step="0.1">
                 </div>
@@ -780,12 +862,29 @@
             <p style="font-size:0.8rem; color:var(--text-secondary);">Calories burned daily at rest.</p>
 
             <div class="tdee-grid">
-                <div class="section-title" style="margin: 12px 0 4px 0;">Daily Maintenance Targets (TDEE)</div>
-                <div class="tdee-row"><span>Sedentary (Little/no exercise)</span><strong id="tdeeSedentary">0 kcal</strong></div>
-                <div class="tdee-row"><span>Light Active (1-3 days/wk)</span><strong id="tdeeLight">0 kcal</strong></div>
-                <div class="tdee-row"><span>Moderate Active (3-5 days/wk)</span><strong id="tdeeModerate">0 kcal</strong></div>
-                <div class="tdee-row"><span>Very Active (6-7 days/wk)</span><strong id="tdeeHeavy">0 kcal</strong></div>
+                <div class="section-title" style="margin: 12px 0 4px 0;">Target TDEE (Selected Activity)</div>
+                <div class="tdee-row"><span id="selectedActivityLabel">Selected Activity</span><strong id="selectedTdeeVal">0 kcal</strong></div>
             </div>
+        </div>
+
+        <!-- Food Log & Calorie Tracker -->
+        <div class="food-log-section">
+            <div class="section-title" style="margin-bottom:10px;">Daily Food & Calorie Tracker</div>
+            
+            <div class="daily-calorie-summary">
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Today's Total Ingested</span>
+                    <strong id="todayCalorieTotal" style="font-size:1.4rem; color:var(--accent);">0 kcal</strong>
+                </div>
+                <button onclick="clearTodayFoodLog()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;">Clear Log</button>
+            </div>
+
+            <div class="food-input-row">
+                <input type="text" id="foodItemInput" placeholder="e.g. 2 large eggs or 150g grilled chicken" onkeypress="if(event.key==='Enter') addFoodItem()">
+                <button onclick="addFoodItem()">Log Food</button>
+            </div>
+
+            <div id="foodList" class="food-list-container"></div>
         </div>
     </div>
 
@@ -820,6 +919,22 @@
             document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
         }
         loadRandomQuote();
+
+        const calorieDatabase = [
+            { keywords: ["egg", "eggs"], caloriesPerUnit: 70 },
+            { keywords: ["chicken breast", "grilled chicken"], caloriesPerUnit: 165 },
+            { keywords: ["banana"], caloriesPerUnit: 105 },
+            { keywords: ["apple"], caloriesPerUnit: 95 },
+            { keywords: ["rice", "white rice", "brown rice"], caloriesPerUnit: 200 },
+            { keywords: ["oatmeal", "oats"], caloriesPerUnit: 150 },
+            { keywords: ["protein shake", "protein scoop"], caloriesPerUnit: 130 },
+            { keywords: ["salmon"], caloriesPerUnit: 200 },
+            { keywords: ["steak", "beef"], caloriesPerUnit: 250 },
+            { keywords: ["bread", "slice of bread"], caloriesPerUnit: 80 },
+            { keywords: ["peanut butter"], caloriesPerUnit: 190 },
+            { keywords: ["avocado"], caloriesPerUnit: 240 },
+            { keywords: ["greek yogurt", "yogurt"], caloriesPerUnit: 120 }
+        ];
 
         const workoutData = {
             "Push": {
@@ -914,6 +1029,7 @@
                 document.getElementById('viewCalories').classList.add('active');
                 document.getElementById('navCalories').classList.add('active');
                 loadCalorieBiometrics();
+                renderFoodLog();
             } else {
                 document.getElementById('viewHistory').classList.add('active');
                 document.getElementById('navHistory').classList.add('active');
@@ -964,6 +1080,7 @@
             if (bio.height) document.getElementById('calcHeight').value = bio.height;
             if (bio.age) document.getElementById('calcAge').value = bio.age;
             if (bio.sex) document.getElementById('calcSex').value = bio.sex;
+            if (bio.activity) document.getElementById('calcActivity').value = bio.activity;
             if (bio.leanMass) document.getElementById('calcLeanMass').value = bio.leanMass;
         }
 
@@ -971,6 +1088,7 @@
             const heightInches = parseFloat(document.getElementById('calcHeight').value);
             const age = parseFloat(document.getElementById('calcAge').value);
             const sex = document.getElementById('calcSex').value;
+            const activity = document.getElementById('calcActivity').value;
             const leanMass = document.getElementById('calcLeanMass').value;
 
             const weightLbs = getLatestWeightLbs();
@@ -985,26 +1103,127 @@
                 return;
             }
 
-            // Save static biometrics
-            const staticBio = { height: heightInches, age: age, sex: sex, leanMass: leanMass };
+            const staticBio = { height: heightInches, age: age, sex: sex, activity: activity, leanMass: leanMass };
             localStorage.setItem('static_user_biometrics', JSON.stringify(staticBio));
 
-            // Conversions for Mifflin-St Jeor formula
             const weightKg = weightLbs * 0.45359237;
             const heightCm = heightInches * 2.54;
             const s = (sex === 'male') ? 5 : -161;
 
-            // BMR Formula = 10 * weight(kg) + 6.25 * height(cm) - 5 * age(y) + s
             const bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) + s;
             const bmrRounded = Math.round(bmr);
 
+            const activityMultipliers = {
+                sedentary: 1.2,
+                light: 1.375,
+                moderate: 1.55,
+                heavy: 1.725
+            };
+
+            const activityLabels = {
+                sedentary: "Sedentary (Little/no exercise)",
+                light: "Light Active (1-3 days/wk)",
+                moderate: "Moderate Active (3-5 days/wk)",
+                heavy: "Very Active (6-7 days/wk)"
+            };
+
+            const selectedMult = activityMultipliers[activity] || 1.375;
+            const tdeeVal = Math.round(bmrRounded * selectedMult);
+
             document.getElementById('bmrDisplay').textContent = `${bmrRounded} kcal`;
-            document.getElementById('tdeeSedentary').textContent = `${Math.round(bmrRounded * 1.2)} kcal`;
-            document.getElementById('tdeeLight').textContent = `${Math.round(bmrRounded * 1.375)} kcal`;
-            document.getElementById('tdeeModerate').textContent = `${Math.round(bmrRounded * 1.55)} kcal`;
-            document.getElementById('tdeeHeavy').textContent = `${Math.round(bmrRounded * 1.725)} kcal`;
+            document.getElementById('selectedActivityLabel').textContent = activityLabels[activity];
+            document.getElementById('selectedTdeeVal').textContent = `${tdeeVal} kcal`;
 
             document.getElementById('calorieResults').style.display = 'block';
+        }
+
+        function estimateCalories(inputText) {
+            const text = inputText.toLowerCase();
+            
+            const explicitMatch = text.match(/(\d+)\s*(kcal|calories|cal)/);
+            if (explicitMatch) {
+                return parseInt(explicitMatch[1]);
+            }
+
+            let quantity = 1;
+            const qtyMatch = text.match(/^(\d+)/);
+            if (qtyMatch) {
+                quantity = parseInt(qtyMatch[1]);
+            }
+
+            for (let item of calorieDatabase) {
+                for (let kw of item.keywords) {
+                    if (text.includes(kw)) {
+                        return item.caloriesPerUnit * quantity;
+                    }
+                }
+            }
+
+            return 150 * quantity;
+        }
+
+        function addFoodItem() {
+            const input = document.getElementById('foodItemInput');
+            const itemText = input.value.trim();
+
+            if (!itemText) return;
+
+            const estimatedCals = estimateCalories(itemText);
+            const foodRecord = {
+                id: Date.now(),
+                text: itemText,
+                calories: estimatedCals
+            };
+
+            const todayKey = 'food_log_' + new Date().toISOString().slice(0,10);
+            let dailyLog = JSON.parse(localStorage.getItem(todayKey) || '[]');
+            dailyLog.push(foodRecord);
+            localStorage.setItem(todayKey, JSON.stringify(dailyLog));
+
+            input.value = '';
+            renderFoodLog();
+        }
+
+        function removeFoodItem(id) {
+            const todayKey = 'food_log_' + new Date().toISOString().slice(0,10);
+            let dailyLog = JSON.parse(localStorage.getItem(todayKey) || '[]');
+            dailyLog = dailyLog.filter(item => item.id !== id);
+            localStorage.setItem(todayKey, JSON.stringify(dailyLog));
+            renderFoodLog();
+        }
+
+        function clearTodayFoodLog() {
+            if (confirm("Clear all logged food items for today?")) {
+                const todayKey = 'food_log_' + new Date().toISOString().slice(0,10);
+                localStorage.removeItem(todayKey);
+                renderFoodLog();
+            }
+        }
+
+        function renderFoodLog() {
+            const todayKey = 'food_log_' + new Date().toISOString().slice(0,10);
+            const dailyLog = JSON.parse(localStorage.getItem(todayKey) || '[]');
+            const container = document.getElementById('foodList');
+            const totalDisplay = document.getElementById('todayCalorieTotal');
+
+            let total = 0;
+            let html = '';
+
+            dailyLog.forEach(item => {
+                total += item.calories;
+                html += `
+                    <div class="food-item-row">
+                        <span>${item.text}</span>
+                        <div>
+                            <strong style="color:var(--accent); margin-right:8px;">+${item.calories} kcal</strong>
+                            <button onclick="removeFoodItem(${item.id})">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            totalDisplay.textContent = `${total} kcal`;
+            container.innerHTML = html || `<div style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding:8px;">No food items logged today yet.</div>`;
         }
 
         function startWorkout(routineName) {
@@ -1154,7 +1373,7 @@
                 return `
                     <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
                         <div class="exercise-name">${metcon.name}</div>
-                        <div class="target-note" style="margin-top:4px;">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
+                        <div class="warmup-target" style="margin-top:4px;">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
                         <div class="set-input-row" style="margin-top:10px;">
                             <div class="input-group">
                                 <label>Plates</label>
@@ -1173,7 +1392,7 @@
             return `
                 <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
                     <div class="exercise-name">${metcon.name}</div>
-                    <div class="target-note" style="margin-top:4px;">Target: ${metcon.reps}</div>
+                    <div class="warmup-target" style="margin-top:4px;">Target: ${metcon.reps}</div>
                     <div class="set-input-row" style="margin-top:10px;">
                         <div class="input-group">
                             <label>Log Result / Time</label>

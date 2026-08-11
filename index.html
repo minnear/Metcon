@@ -596,9 +596,15 @@
             padding-top: 10px;
             border-top: 1px solid var(--border);
             display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.82rem;
+        }
+
+        .weekly-summary-row {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.82rem;
         }
 
         .food-log-section {
@@ -1017,10 +1023,18 @@
             <canvas id="calorieChart"></canvas>
 
             <div class="weekly-summary-footer">
-                <span style="color:var(--text-secondary); font-weight:600;">This Week's Net Total (Mon–Sun):</span>
-                <span id="weeklyCalorieNetBadge" class="meta-pill" style="font-size:0.82rem; background:rgba(16, 185, 129, 0.2); color:var(--success); border:1px solid var(--success);">
-                    0 kcal
-                </span>
+                <div class="weekly-summary-row">
+                    <span style="color:var(--text-secondary); font-weight:600;">This Week's Net Total (Mon–Sun):</span>
+                    <span id="weeklyCalorieNetBadge" class="meta-pill" style="font-size:0.82rem; background:rgba(16, 185, 129, 0.2); color:var(--success); border:1px solid var(--success);">
+                        0 kcal
+                    </span>
+                </div>
+                <div class="weekly-summary-row">
+                    <span style="color:var(--text-secondary); font-weight:600;">Est. Projected Weight Change:</span>
+                    <span id="weeklyWeightProjectionBadge" class="meta-pill" style="font-size:0.82rem; background:rgba(59, 130, 246, 0.2); color:var(--accent); border:1px solid var(--accent);">
+                        ~0.0 lbs / wk
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -1623,6 +1637,8 @@
 
             const weeklyNet = calculateCurrentWeekCalorieNet(tdeeTarget);
             const weeklyBadge = document.getElementById('weeklyCalorieNetBadge');
+            const weeklyProjBadge = document.getElementById('weeklyWeightProjectionBadge');
+
             if (weeklyBadge) {
                 if (weeklyNet <= 0) {
                     weeklyBadge.style.background = 'rgba(16, 185, 129, 0.2)';
@@ -1634,6 +1650,22 @@
                     weeklyBadge.style.color = 'var(--danger)';
                     weeklyBadge.style.border = '1px solid var(--danger)';
                     weeklyBadge.textContent = `📈 Surplus: +${weeklyNet.toLocaleString()} kcal`;
+                }
+            }
+
+            if (weeklyProjBadge) {
+                // 3500 kcal deficit roughly equals 1.0 lb of fat loss
+                const projectedLbsChange = (weeklyNet / 3500).toFixed(1);
+                if (weeklyNet <= 0) {
+                    weeklyProjBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                    weeklyProjBadge.style.color = 'var(--success)';
+                    weeklyProjBadge.style.border = '1px solid var(--success)';
+                    weeklyProjBadge.textContent = `📉 -${Math.abs(projectedLbsChange)} lbs lost`;
+                } else {
+                    weeklyProjBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+                    weeklyProjBadge.style.color = 'var(--danger)';
+                    weeklyProjBadge.style.border = '1px solid var(--danger)';
+                    weeklyProjBadge.textContent = `📈 +${Math.abs(projectedLbsChange)} lbs gained`;
                 }
             }
         }
@@ -1684,13 +1716,11 @@
             const graphHeight = canvas.height - padding * 2;
             const range = (maxVal - minVal) || 1;
 
-            // Draw Y-Axis Unit Label (kcal)
             ctx.fillStyle = '#9ca3af';
             ctx.font = '10px -apple-system, sans-serif';
             ctx.textAlign = 'left';
             ctx.fillText('kcal', 8, padding - 12);
 
-            // Draw horizontal target TDEE line
             const targetY = canvas.height - padding - ((tdeeTarget - minVal) / range) * graphHeight;
             ctx.beginPath();
             ctx.strokeStyle = '#3b82f6';
@@ -1737,7 +1767,6 @@
                 ctx.fillStyle = '#f4f4f6';
                 ctx.font = '10px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
-                // Render raw number without "k" suffix
                 ctx.fillText(`${pt.netCals}`, pt.x, pt.y - 8);
 
                 ctx.fillStyle = '#9ca3af';

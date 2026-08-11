@@ -56,7 +56,7 @@
 
         .app-nav {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 16px;
             background: var(--card-bg);
             padding: 4px;
@@ -70,11 +70,12 @@
             border: none;
             color: var(--text-secondary);
             padding: 10px 0;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .nav-btn.active {
@@ -83,7 +84,7 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* Rest Timer Bar (Positioned inside Active Workspace) */
+        /* Rest Timer Bar */
         .timer-bar-inline {
             background: var(--card-bg);
             border: 1px solid var(--accent);
@@ -97,24 +98,14 @@
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
-        /* Flashing Animation when Rest Timer Expires */
         .timer-bar-inline.flash-active {
             animation: timerFlash 0.5s ease-in-out 3;
         }
 
         @keyframes timerFlash {
-            0% {
-                background-color: var(--card-bg);
-                border-color: var(--accent);
-            }
-            50% {
-                background-color: var(--accent);
-                border-color: #ffffff;
-            }
-            100% {
-                background-color: var(--card-bg);
-                border-color: var(--accent);
-            }
+            0% { background-color: var(--card-bg); border-color: var(--accent); }
+            50% { background-color: var(--accent); border-color: #ffffff; }
+            100% { background-color: var(--card-bg); border-color: var(--accent); }
         }
 
         .timer-display-top {
@@ -218,7 +209,7 @@
             text-transform: uppercase;
         }
 
-        .bio-input-group input {
+        .bio-input-group input, .bio-input-group select {
             width: 100%;
             background: #121214;
             border: 1px solid var(--border);
@@ -235,9 +226,9 @@
             background: #2e2e38;
             color: var(--text-primary);
             border: none;
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
         }
@@ -351,6 +342,8 @@
 
         .card-group {
             margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
         }
 
         .section-title {
@@ -389,12 +382,13 @@
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            transition: background-color 0.3s ease, border-color 0.3s ease, order 0.3s ease;
         }
 
         .exercise-card.completed-exercise {
             background-color: var(--completed-bg);
             border-color: var(--success);
+            order: 99; /* Moves completed exercises to bottom */
         }
 
         .exercise-top-row {
@@ -413,6 +407,7 @@
             display: flex;
             gap: 6px;
             align-items: center;
+            white-space: nowrap; /* Prevents wrapping */
         }
 
         .set-badge {
@@ -423,6 +418,7 @@
             padding: 4px 8px;
             border-radius: 6px;
             text-transform: uppercase;
+            white-space: nowrap; /* Strict no-wrap rule */
         }
 
         .set-badge.completed-badge {
@@ -437,6 +433,7 @@
             font-weight: 600;
             padding: 4px 8px;
             border-radius: 6px;
+            white-space: nowrap;
         }
 
         .set-input-row {
@@ -496,11 +493,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
         }
 
-        .trigger-rest-btn:active {
-            background: var(--accent);
-            color: white;
+        /* 1-second pulse animation when timer is running */
+        .trigger-rest-btn.rest-btn-pulsing {
+            animation: restPulse 1s infinite alternate;
+        }
+
+        @keyframes restPulse {
+            0% { background: #2e2e38; color: #f4f4f6; border-color: var(--border); }
+            100% { background: var(--accent); color: #ffffff; border-color: #ffffff; box-shadow: 0 0 8px var(--accent); }
         }
 
         .completed-sets-container {
@@ -524,49 +527,38 @@
             color: var(--text-primary);
         }
 
-        #summaryWorkspace {
-            display: none;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+        /* Calorie Calculator Card Styles */
+        .calc-result-box {
+            background: linear-gradient(135deg, #1e1e24, #2a2a38);
+            border: 1px solid var(--accent);
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
+            padding: 16px;
+            margin-top: 16px;
+            text-align: center;
         }
 
-        .summary-header {
+        .bmr-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin: 4px 0 12px 0;
+        }
+
+        .tdee-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+            margin-top: 12px;
+        }
+
+        .tdee-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-        }
-
-        .summary-header h2 {
-            font-size: 1.1rem;
-            color: var(--accent);
-        }
-
-        .back-to-workout-btn {
-            background: var(--border);
-            color: white;
-            border: none;
-            padding: 6px 12px;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
             border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .summary-exercise-block {
-            margin-bottom: 14px;
-            border-bottom: 1px dashed var(--border);
-            padding-bottom: 10px;
-        }
-
-        .summary-exercise-block h4 {
-            font-size: 0.9rem;
-            margin-bottom: 4px;
         }
 
         .history-card {
@@ -605,10 +597,6 @@
             cursor: pointer;
             padding: 2px 6px;
             border-radius: 4px;
-        }
-
-        .delete-history-btn:hover {
-            background: rgba(239, 68, 68, 0.15);
         }
 
         .history-exercise-row {
@@ -662,9 +650,11 @@
 
     <div class="app-nav">
         <button class="nav-btn active" id="navWorkouts" onclick="switchView('workouts')">Workouts</button>
+        <button class="nav-btn" id="navCalories" onclick="switchView('calories')">Calories</button>
         <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
     </div>
 
+    <!-- WORKOUT VIEW -->
     <div id="viewWorkouts" class="view-section active">
         
         <div id="workoutSelector">
@@ -754,6 +744,52 @@
 
     </div>
 
+    <!-- CALORIE CALCULATOR VIEW -->
+    <div id="viewCalories" class="view-section">
+        <div class="biometrics-card">
+            <div class="section-title">Body Parameters</div>
+            <div class="biometrics-grid">
+                <div class="bio-input-group">
+                    <label>Height (Inches)</label>
+                    <input type="number" id="calcHeight" placeholder="e.g. 70" step="0.5">
+                </div>
+                <div class="bio-input-group">
+                    <label>Age (Years)</label>
+                    <input type="number" id="calcAge" placeholder="e.g. 30">
+                </div>
+            </div>
+            <div class="biometrics-grid" style="margin-top: 10px;">
+                <div class="bio-input-group">
+                    <label>Biological Sex</label>
+                    <select id="calcSex">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="bio-input-group">
+                    <label>Lean Mass (lbs - Optional)</label>
+                    <input type="number" id="calcLeanMass" placeholder="e.g. 140" step="0.1">
+                </div>
+            </div>
+            <button class="save-bio-btn" style="background: var(--accent);" onclick="calculateCalories()">Calculate BMR & TDEE</button>
+        </div>
+
+        <div id="calorieResults" style="display:none;" class="calc-result-box">
+            <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Basal Metabolic Rate (BMR)</div>
+            <div id="bmrDisplay" class="bmr-number">0 kcal</div>
+            <p style="font-size:0.8rem; color:var(--text-secondary);">Calories burned daily at rest.</p>
+
+            <div class="tdee-grid">
+                <div class="section-title" style="margin: 12px 0 4px 0;">Daily Maintenance Targets (TDEE)</div>
+                <div class="tdee-row"><span>Sedentary (Little/no exercise)</span><strong id="tdeeSedentary">0 kcal</strong></div>
+                <div class="tdee-row"><span>Light Active (1-3 days/wk)</span><strong id="tdeeLight">0 kcal</strong></div>
+                <div class="tdee-row"><span>Moderate Active (3-5 days/wk)</span><strong id="tdeeModerate">0 kcal</strong></div>
+                <div class="tdee-row"><span>Very Active (6-7 days/wk)</span><strong id="tdeeHeavy">0 kcal</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY VIEW -->
     <div id="viewHistory" class="view-section">
         <div class="chart-container">
             <h3>Body Weight Trend</h3>
@@ -874,6 +910,10 @@
             if (viewName === 'workouts') {
                 document.getElementById('viewWorkouts').classList.add('active');
                 document.getElementById('navWorkouts').classList.add('active');
+            } else if (viewName === 'calories') {
+                document.getElementById('viewCalories').classList.add('active');
+                document.getElementById('navCalories').classList.add('active');
+                loadCalorieBiometrics();
             } else {
                 document.getElementById('viewHistory').classList.add('active');
                 document.getElementById('navHistory').classList.add('active');
@@ -881,6 +921,17 @@
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function getLatestWeightLbs() {
+            const liveVal = document.getElementById('bioWeightInput').value;
+            if (liveVal) return parseFloat(liveVal);
+
+            const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
+            for (let i = biometrics.length - 1; i >= 0; i--) {
+                if (biometrics[i].weight) return biometrics[i].weight;
+            }
+            return null;
         }
 
         function saveBiometrics() {
@@ -906,6 +957,54 @@
             alert("Biometrics saved successfully!");
             document.getElementById('bioWeightInput').value = '';
             document.getElementById('bioWaistInput').value = '';
+        }
+
+        function loadCalorieBiometrics() {
+            const bio = JSON.parse(localStorage.getItem('static_user_biometrics') || '{}');
+            if (bio.height) document.getElementById('calcHeight').value = bio.height;
+            if (bio.age) document.getElementById('calcAge').value = bio.age;
+            if (bio.sex) document.getElementById('calcSex').value = bio.sex;
+            if (bio.leanMass) document.getElementById('calcLeanMass').value = bio.leanMass;
+        }
+
+        function calculateCalories() {
+            const heightInches = parseFloat(document.getElementById('calcHeight').value);
+            const age = parseFloat(document.getElementById('calcAge').value);
+            const sex = document.getElementById('calcSex').value;
+            const leanMass = document.getElementById('calcLeanMass').value;
+
+            const weightLbs = getLatestWeightLbs();
+
+            if (!weightLbs) {
+                alert("Please enter a body weight on the Workouts tab first!");
+                return;
+            }
+
+            if (!heightInches || !age) {
+                alert("Please enter both height and age to calculate BMR.");
+                return;
+            }
+
+            // Save static biometrics
+            const staticBio = { height: heightInches, age: age, sex: sex, leanMass: leanMass };
+            localStorage.setItem('static_user_biometrics', JSON.stringify(staticBio));
+
+            // Conversions for Mifflin-St Jeor formula
+            const weightKg = weightLbs * 0.45359237;
+            const heightCm = heightInches * 2.54;
+            const s = (sex === 'male') ? 5 : -161;
+
+            // BMR Formula = 10 * weight(kg) + 6.25 * height(cm) - 5 * age(y) + s
+            const bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) + s;
+            const bmrRounded = Math.round(bmr);
+
+            document.getElementById('bmrDisplay').textContent = `${bmrRounded} kcal`;
+            document.getElementById('tdeeSedentary').textContent = `${Math.round(bmrRounded * 1.2)} kcal`;
+            document.getElementById('tdeeLight').textContent = `${Math.round(bmrRounded * 1.375)} kcal`;
+            document.getElementById('tdeeModerate').textContent = `${Math.round(bmrRounded * 1.55)} kcal`;
+            document.getElementById('tdeeHeavy').textContent = `${Math.round(bmrRounded * 1.725)} kcal`;
+
+            document.getElementById('calorieResults').style.display = 'block';
         }
 
         function startWorkout(routineName) {
@@ -1017,7 +1116,7 @@
                             <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
                         </div>
                         <button class="accept-set-btn" onclick="acceptSet('${ex.name}', '${unitLabel}')" title="Log Set">✓</button>
-                        <button class="trigger-rest-btn" onclick="startRestForExercise(${restSeconds})" title="Start ${restSeconds}s Rest">💤</button>
+                        <button class="trigger-rest-btn" id="restBtn-${CSS.escape(ex.name)}" onclick="startRestForExercise(${restSeconds}, '${CSS.escape(ex.name)}')" title="Start ${restSeconds}s Rest">💤</button>
                     </div>
                 `;
             }
@@ -1055,8 +1154,8 @@
                 return `
                     <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
                         <div class="exercise-name">${metcon.name}</div>
-                        <div class="target-note">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
-                        <div class="set-input-row">
+                        <div class="target-note" style="margin-top:4px;">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
+                        <div class="set-input-row" style="margin-top:10px;">
                             <div class="input-group">
                                 <label>Plates</label>
                                 <input type="number" id="sled-plates-${CSS.escape(metcon.name)}" value="${state.plates}" placeholder="e.g. 4" oninput="updateSledMetcon('${metcon.name}')">
@@ -1066,7 +1165,7 @@
                                 <input type="number" id="sled-reps-${CSS.escape(metcon.name)}" value="${state.reps}" placeholder="e.g. 5" oninput="updateSledMetcon('${metcon.name}')">
                             </div>
                         </div>
-                        ${metcon.notes ? `<div class="target-note" style="margin-top:8px;">${metcon.notes}</div>` : ''}
+                        ${metcon.notes ? `<div class="warmup-target" style="margin-top:8px;">${metcon.notes}</div>` : ''}
                     </div>
                 `;
             }
@@ -1074,14 +1173,14 @@
             return `
                 <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
                     <div class="exercise-name">${metcon.name}</div>
-                    <div class="target-note">Target: ${metcon.reps}</div>
-                    <div class="set-input-row">
+                    <div class="target-note" style="margin-top:4px;">Target: ${metcon.reps}</div>
+                    <div class="set-input-row" style="margin-top:10px;">
                         <div class="input-group">
                             <label>Log Result / Time</label>
                             <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. 10 mins continuous" oninput="updateMetconResult('${metcon.name}', this.value)">
                         </div>
                     </div>
-                    ${metcon.notes ? `<div class="target-note" style="margin-top:8px;">${metcon.notes}</div>` : ''}
+                    ${metcon.notes ? `<div class="warmup-target" style="margin-top:8px;">${metcon.notes}</div>` : ''}
                 </div>
             `;
         }
@@ -1329,11 +1428,17 @@
         let selectedInterval = 90;
         let timeLeft = 90;
         let isRunning = false;
+        let activeRestBtnId = null;
 
         function formatTime(seconds) {
             let mins = Math.floor(seconds / 60);
             let secs = seconds % 60;
             return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function clearRestBtnPulse() {
+            document.querySelectorAll('.trigger-rest-btn').forEach(btn => btn.classList.remove('rest-btn-pulsing'));
+            activeRestBtnId = null;
         }
 
         function resetTimer() {
@@ -1343,6 +1448,7 @@
             document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
             document.getElementById('timerBtn').textContent = "Start";
             document.getElementById('inlineRestTimer').classList.remove('flash-active');
+            clearRestBtnPulse();
         }
 
         function triggerTimerAlert() {
@@ -1350,6 +1456,7 @@
             timerEl.classList.remove('flash-active');
             void timerEl.offsetWidth; 
             timerEl.classList.add('flash-active');
+            clearRestBtnPulse();
 
             if (navigator.vibrate) {
                 navigator.vibrate([200, 100, 200, 100, 200]);
@@ -1360,12 +1467,20 @@
             }, 1500);
         }
 
-        function startRestForExercise(seconds) {
+        function startRestForExercise(seconds, btnElementId) {
             const targetSeconds = seconds || 90;
             selectedInterval = targetSeconds;
             
             clearInterval(countdown);
+            clearRestBtnPulse();
             document.getElementById('inlineRestTimer').classList.remove('flash-active');
+
+            if (btnElementId) {
+                activeRestBtnId = `restBtn-${btnElementId}`;
+                const btn = document.getElementById(activeRestBtnId);
+                if (btn) btn.classList.add('rest-btn-pulsing');
+            }
+
             timeLeft = targetSeconds;
             isRunning = true;
             
@@ -1398,11 +1513,20 @@
                 clearInterval(countdown);
                 isRunning = false;
                 btn.textContent = "Resume";
+                if (activeRestBtnId) {
+                    const activeBtn = document.getElementById(activeRestBtnId);
+                    if (activeBtn) activeBtn.classList.remove('rest-btn-pulsing');
+                }
             } else {
                 if (timeLeft <= 0) timeLeft = selectedInterval;
                 isRunning = true;
                 btn.textContent = "Pause";
                 document.getElementById('inlineRestTimer').classList.remove('flash-active');
+
+                if (activeRestBtnId) {
+                    const activeBtn = document.getElementById(activeRestBtnId);
+                    if (activeBtn) activeBtn.classList.add('rest-btn-pulsing');
+                }
 
                 countdown = setInterval(() => {
                     timeLeft--;

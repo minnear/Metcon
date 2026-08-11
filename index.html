@@ -382,13 +382,12 @@
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
-            transition: background-color 0.3s ease, border-color 0.3s ease, order 0.3s ease;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .exercise-card.completed-exercise {
             background-color: var(--completed-bg);
             border-color: var(--success);
-            order: 99;
         }
 
         .exercise-top-row {
@@ -424,6 +423,7 @@
         .set-badge.completed-badge {
             background: rgba(16, 185, 129, 0.25);
             color: var(--success);
+            white-space: nowrap;
         }
 
         .rest-badge {
@@ -597,13 +597,33 @@
 
         .daily-calorie-summary {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
             background: rgba(59, 130, 246, 0.15);
             border: 1px solid var(--accent);
             padding: 12px 16px;
             border-radius: 10px;
             margin-bottom: 12px;
+        }
+
+        .calorie-breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .calorie-breakdown-row strong {
+            color: var(--text-primary);
+        }
+
+        .net-calorie-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+            margin-top: 4px;
         }
 
         .food-list-container {
@@ -867,16 +887,31 @@
             </div>
         </div>
 
-        <!-- Food Log & Calorie Tracker -->
+        <!-- Food Log & Energy Balance Tracker -->
         <div class="food-log-section">
-            <div class="section-title" style="margin-bottom:10px;">Daily Food & Calorie Tracker</div>
+            <div class="section-title" style="margin-bottom:10px;">Daily Energy Balance Tracker</div>
             
             <div class="daily-calorie-summary">
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Today's Total Ingested</span>
-                    <strong id="todayCalorieTotal" style="font-size:1.4rem; color:var(--accent);">0 kcal</strong>
+                <div class="calorie-breakdown-row">
+                    <span>Target TDEE:</span>
+                    <strong id="summaryTdeeTarget">0 kcal</strong>
                 </div>
-                <button onclick="clearTodayFoodLog()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;">Clear Log</button>
+                <div class="calorie-breakdown-row">
+                    <span>+ Ingested Food:</span>
+                    <strong id="summaryFoodIngested" style="color:var(--accent);">+0 kcal</strong>
+                </div>
+                <div class="calorie-breakdown-row">
+                    <span>- Exercise Burned:</span>
+                    <strong id="summaryExerciseBurned" style="color:var(--success);">-0 kcal</strong>
+                </div>
+
+                <div class="net-calorie-total-row">
+                    <div>
+                        <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Net Calories vs TDEE</span>
+                        <strong id="todayCalorieTotal" style="font-size:1.4rem; color:var(--accent);">0 kcal</strong>
+                    </div>
+                    <button onclick="clearTodayFoodLog()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;">Clear Food Log</button>
+                </div>
             </div>
 
             <div class="food-input-row">
@@ -948,7 +983,7 @@
                     { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
                     { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35", unit: "lbs", inputType: "Reps" }
                 ],
-                metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds." }
+                metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds.", isMetcon: true }
             },
             "Upper Body Pull": {
                 warmup: [
@@ -971,7 +1006,8 @@
                     sets: 1, 
                     reps: "10 mins", 
                     rest: "Minimal", 
-                    notes: "Maintain continuous pace with minimal rest." 
+                    notes: "Maintain continuous pace with minimal rest.",
+                    isMetcon: true 
                 }
             },
             "Lower Body": {
@@ -993,6 +1029,7 @@
                 metcon: { 
                     name: "Sled Push & Pull", 
                     isSledMetcon: true, 
+                    isMetcon: true,
                     suggestedPlates: 4, 
                     suggestedReps: 5, 
                     rest: "As needed", 
@@ -1047,7 +1084,7 @@
             for (let i = biometrics.length - 1; i >= 0; i--) {
                 if (biometrics[i].weight) return biometrics[i].weight;
             }
-            return null;
+            return 175;
         }
 
         function saveBiometrics() {
@@ -1135,6 +1172,7 @@
             document.getElementById('selectedTdeeVal').textContent = `${tdeeVal} kcal`;
 
             document.getElementById('calorieResults').style.display = 'block';
+            renderFoodLog();
         }
 
         function estimateCalories(inputText) {
@@ -1200,17 +1238,44 @@
             }
         }
 
+        function calculateTodayExerciseBurn() {
+            const history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            let totalBurn = 0;
+            history.forEach(item => {
+                if (item.date && item.date.includes(todayStr)) {
+                    totalBurn += (item.estimatedCalories || 0);
+                }
+            });
+            return totalBurn;
+        }
+
+        function getStoredTDEE() {
+            const bio = JSON.parse(localStorage.getItem('static_user_biometrics') || '{}');
+            const weightLbs = getLatestWeightLbs();
+            
+            if (!bio.height || !bio.age || !weightLbs) return 2000;
+
+            const weightKg = weightLbs * 0.45359237;
+            const heightCm = bio.height * 2.54;
+            const s = (bio.sex === 'male') ? 5 : -161;
+            const bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * bio.age) + s;
+
+            const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, heavy: 1.725 };
+            return Math.round(bmr * (multipliers[bio.activity] || 1.375));
+        }
+
         function renderFoodLog() {
             const todayKey = 'food_log_' + new Date().toISOString().slice(0,10);
             const dailyLog = JSON.parse(localStorage.getItem(todayKey) || '[]');
             const container = document.getElementById('foodList');
-            const totalDisplay = document.getElementById('todayCalorieTotal');
-
-            let total = 0;
+            
+            let totalFood = 0;
             let html = '';
 
             dailyLog.forEach(item => {
-                total += item.calories;
+                totalFood += item.calories;
                 html += `
                     <div class="food-item-row">
                         <span>${item.text}</span>
@@ -1222,7 +1287,15 @@
                 `;
             });
 
-            totalDisplay.textContent = `${total} kcal`;
+            const tdeeTarget = getStoredTDEE();
+            const exerciseBurn = calculateTodayExerciseBurn();
+            const netCalories = tdeeTarget + totalFood - exerciseBurn;
+
+            document.getElementById('summaryTdeeTarget').textContent = `${tdeeTarget} kcal`;
+            document.getElementById('summaryFoodIngested').textContent = `+${totalFood} kcal`;
+            document.getElementById('summaryExerciseBurned').textContent = `-${exerciseBurn} kcal`;
+            document.getElementById('todayCalorieTotal').textContent = `${netCalories} kcal`;
+
             container.innerHTML = html || `<div style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding:8px;">No food items logged today yet.</div>`;
         }
 
@@ -1277,7 +1350,20 @@
 
             if (routine.secondary && routine.secondary.length > 0) {
                 html += `<div class="card-group"><div class="section-title">⚡ Secondary Movements</div>`;
-                routine.secondary.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+                
+                // Partition secondary exercises: uncompleted first, then completed in original order
+                const uncompleted = routine.secondary.filter(ex => {
+                    const st = activeWorkoutState[ex.name];
+                    return !st || st.currentSet <= st.totalSets;
+                });
+                const completed = routine.secondary.filter(ex => {
+                    const st = activeWorkoutState[ex.name];
+                    return st && st.currentSet > st.totalSets;
+                });
+
+                uncompleted.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+                completed.forEach((ex) => { html += generateExerciseCardHtml(ex); });
+                
                 html += `</div>`;
             }
 
@@ -1363,27 +1449,35 @@
             if (!activeWorkoutState[metcon.name]) {
                 activeWorkoutState[metcon.name] = { 
                     isMetcon: true, 
+                    completed: false,
                     plates: metcon.suggestedPlates || "", 
                     reps: metcon.suggestedReps || "", 
                     result: "" 
                 };
             }
             const state = activeWorkoutState[metcon.name];
+            const escapedName = metcon.name.replace(/'/g, "\\'");
 
             if (metcon.isSledMetcon) {
                 return `
-                    <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
-                        <div class="exercise-name">${metcon.name}</div>
-                        <div class="warmup-target" style="margin-top:4px;">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
+                    <div class="exercise-card ${state.completed ? 'completed-exercise' : ''}" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
+                        <div class="exercise-top-row">
+                            <div class="exercise-name">${metcon.name}</div>
+                            <div class="exercise-badges">
+                                <div class="set-badge ${state.completed ? 'completed-badge' : ''}">${state.completed ? 'Completed ✓' : 'Metcon'}</div>
+                            </div>
+                        </div>
+                        <div class="warmup-target">Target: ${metcon.suggestedPlates} Plates, ${metcon.suggestedReps} Reps</div>
                         <div class="set-input-row" style="margin-top:10px;">
                             <div class="input-group">
                                 <label>Plates</label>
-                                <input type="number" id="sled-plates-${CSS.escape(metcon.name)}" value="${state.plates}" placeholder="e.g. 4" oninput="updateSledMetcon('${metcon.name}')">
+                                <input type="number" id="sled-plates-${CSS.escape(metcon.name)}" value="${state.plates}" placeholder="e.g. 4" oninput="updateSledMetcon('${escapedName}')">
                             </div>
                             <div class="input-group">
                                 <label>Reps</label>
-                                <input type="number" id="sled-reps-${CSS.escape(metcon.name)}" value="${state.reps}" placeholder="e.g. 5" oninput="updateSledMetcon('${metcon.name}')">
+                                <input type="number" id="sled-reps-${CSS.escape(metcon.name)}" value="${state.reps}" placeholder="e.g. 5" oninput="updateSledMetcon('${escapedName}')">
                             </div>
+                            <button class="accept-set-btn" onclick="toggleMetconCheck('${escapedName}')" title="Check Off Metcon">${state.completed ? '✓' : '✓ Check'}</button>
                         </div>
                         ${metcon.notes ? `<div class="warmup-target" style="margin-top:8px;">${metcon.notes}</div>` : ''}
                     </div>
@@ -1391,18 +1485,31 @@
             }
 
             return `
-                <div class="exercise-card" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
-                    <div class="exercise-name">${metcon.name}</div>
-                    <div class="warmup-target" style="margin-top:4px;">Target: ${metcon.reps}</div>
+                <div class="exercise-card ${state.completed ? 'completed-exercise' : ''}" style="border-color: var(--accent);" id="card-${CSS.escape(metcon.name)}">
+                    <div class="exercise-top-row">
+                        <div class="exercise-name">${metcon.name}</div>
+                        <div class="exercise-badges">
+                            <div class="set-badge ${state.completed ? 'completed-badge' : ''}">${state.completed ? 'Completed ✓' : 'Metcon'}</div>
+                        </div>
+                    </div>
+                    <div class="warmup-target">Target: ${metcon.reps}</div>
                     <div class="set-input-row" style="margin-top:10px;">
                         <div class="input-group">
                             <label>Log Result / Time</label>
-                            <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. 10 mins continuous" oninput="updateMetconResult('${metcon.name}', this.value)">
+                            <input type="text" id="metcon-input-${CSS.escape(metcon.name)}" value="${state.result}" placeholder="e.g. 10 mins continuous" oninput="updateMetconResult('${escapedName}', this.value)">
                         </div>
+                        <button class="accept-set-btn" onclick="toggleMetconCheck('${escapedName}')" title="Check Off Metcon">${state.completed ? '✓' : '✓ Check'}</button>
                     </div>
                     ${metcon.notes ? `<div class="warmup-target" style="margin-top:8px;">${metcon.notes}</div>` : ''}
                 </div>
             `;
+        }
+
+        function toggleMetconCheck(name) {
+            if (activeWorkoutState[name]) {
+                activeWorkoutState[name].completed = !activeWorkoutState[name].completed;
+                renderActiveExercises();
+            }
         }
 
         function acceptSet(exerciseName, unitLabel) {
@@ -1463,7 +1570,7 @@
             for (const [name, state] of Object.entries(activeWorkoutState)) {
                 html += `<div class="summary-exercise-block"><h4>${name}</h4>`;
                 if (state.isMetcon) {
-                    html += `<div>Result: ${state.result ? state.result : 'Not logged yet'}</div>`;
+                    html += `<div>Result: ${state.result ? state.result : (state.completed ? 'Completed ✓' : 'Not logged yet')}</div>`;
                 } else {
                     if (state.completedSets.length === 0) {
                         html += `<div style="color:var(--text-secondary); font-size:0.8rem;">No sets completed yet.</div>`;
@@ -1489,11 +1596,16 @@
         function finishWorkout() {
             const durationMs = Date.now() - (workoutStartTime || Date.now());
             const durationMins = Math.max(1, Math.round(durationMs / 60000));
+            const weightLbs = getLatestWeightLbs();
+            const weightKg = weightLbs * 0.45359237;
+
+            // Estimate exercise calorie burn using standard MET = 6.0 for resistance/metcon workouts
+            const estimatedBurn = Math.round(6.0 * 3.5 * weightKg / 200 * durationMins);
 
             const exerciseRows = [];
             for (const [name, state] of Object.entries(activeWorkoutState)) {
                 if (state.isMetcon) {
-                    exerciseRows.push({ name, details: `Result: ${state.result ? state.result : 'Completed'}` });
+                    exerciseRows.push({ name, details: `Result: ${state.result ? state.result : (state.completed ? 'Completed ✓' : 'Logged')}` });
                 } else {
                     const setSummaries = state.completedSets.map(s => {
                         const unitStr = isNaN(parseFloat(s.weight)) ? '' : ` ${s.unit || 'lbs'}`;
@@ -1507,6 +1619,7 @@
                 id: Date.now(),
                 routine: currentActiveRoutine,
                 duration: `${durationMins} min${durationMins > 1 ? 's' : ''}`,
+                estimatedCalories: estimatedBurn,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 exercises: exerciseRows
             };
@@ -1515,7 +1628,7 @@
             history.unshift(workoutRecord);
             localStorage.setItem('workout_history', JSON.stringify(history));
 
-            alert(`Workout completed in ${workoutRecord.duration}! Saved successfully.`);
+            alert(`Workout completed in ${workoutRecord.duration}! Estimated ~${estimatedBurn} kcal burned.`);
             resetWorkspace();
             switchView('history');
         }
@@ -1557,12 +1670,13 @@
             let html = '';
             history.forEach(item => {
                 const durationBadge = item.duration ? ` • ⏱️ ${item.duration}` : '';
+                const calBadge = item.estimatedCalories ? ` • 🔥 ~${item.estimatedCalories} kcal` : '';
                 html += `
                     <div class="history-card">
                         <div class="history-header">
                             <div>
                                 <span class="history-routine">${item.routine} Workout</span>
-                                <div class="history-date">${item.date}${durationBadge}</div>
+                                <div class="history-date">${item.date}${durationBadge}${calBadge}</div>
                             </div>
                             <button class="delete-history-btn" onclick="deleteWorkoutRecord(${item.id})" title="Delete Workout">🗑️</button>
                         </div>

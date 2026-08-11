@@ -85,7 +85,11 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
+        /* Feature 1: Sticky/Floating Rest Timer Bar */
         .timer-bar-inline {
+            position: sticky;
+            top: 10px;
+            z-index: 99;
             background: var(--card-bg);
             border: 1px solid var(--accent);
             border-radius: 12px;
@@ -94,7 +98,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
@@ -470,6 +474,30 @@
             border-color: var(--accent);
         }
 
+        /* Feature 2: Stepper Container */
+        .stepper-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stepper-btn {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .stepper-btn:active {
+            background: var(--accent);
+            color: white;
+        }
+
         .accept-set-btn {
             background: var(--success);
             color: white;
@@ -530,33 +558,42 @@
             background: linear-gradient(135deg, #1e1e24, #2a2a38);
             border: 1px solid var(--accent);
             border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
+            padding: 18px 16px;
+            margin: 16px 0;
             text-align: center;
         }
 
-        .bmr-number {
-            font-size: 2rem;
-            font-weight: 800;
+        .tdee-main-number {
+            font-size: 2.2rem;
+            font-weight: 900;
             color: var(--accent);
-            margin: 4px 0 12px 0;
+            line-height: 1.1;
+            margin: 6px 0 4px 0;
         }
 
-        .tdee-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            text-align: left;
+        .tdee-explanation {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        .bmr-subtext {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            border-top: 1px dashed var(--border);
+            padding-top: 8px;
+        }
+
+        .weekly-summary-footer {
             margin-top: 12px;
-        }
-
-        .tdee-row {
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
-            background: rgba(0,0,0,0.2);
-            padding: 8px 12px;
-            border-radius: 6px;
+            align-items: center;
+            font-size: 0.82rem;
         }
 
         .food-log-section {
@@ -567,10 +604,37 @@
             margin-top: 20px;
         }
 
+        /* Feature 3: Quick Add Preset Chips */
+        .food-presets-scroll {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-top: 10px;
+            scrollbar-width: none;
+        }
+
+        .food-preset-chip {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .food-preset-chip:active {
+            background: var(--accent);
+            color: white;
+        }
+
         .food-input-row {
             display: flex;
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .food-input-row input {
@@ -868,6 +932,7 @@
                 </div>
             </div>
 
+            <!-- Sticky Rest Timer Bar -->
             <div id="inlineRestTimer" class="timer-bar-inline">
                 <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">
                     Rest Timer
@@ -933,26 +998,31 @@
             <button class="save-bio-btn" style="background: var(--accent);" onclick="calculateCalories()">Calculate BMR & TDEE</button>
         </div>
 
-        <!-- Calorie Balance Trend Chart -->
-        <div class="chart-container">
-            <h3>Daily Calorie Deficit / Surplus Trend</h3>
-            <canvas id="calorieChart"></canvas>
-        </div>
-
-        <div id="calorieResults" style="display:none;" class="calc-result-box">
-            <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Basal Metabolic Rate (BMR)</div>
-            <div id="bmrDisplay" class="bmr-number">0 kcal</div>
-            <p style="font-size:0.8rem; color:var(--text-secondary);">Calories burned daily at rest.</p>
-
-            <div class="tdee-grid">
-                <div class="section-title" style="margin: 12px 0 4px 0;">Target TDEE (Selected Activity)</div>
-                <div class="tdee-row"><span id="selectedActivityLabel">Selected Activity</span><strong id="selectedTdeeVal">0 kcal</strong></div>
+        <div id="calorieResults" class="calc-result-box">
+            <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Target Total Daily Energy Expenditure (TDEE)</div>
+            <div id="tdeeDisplayMain" class="tdee-main-number">2,200 kcal</div>
+            <p class="tdee-explanation">
+                BMR (calories burned at rest) combined with calories expended during daily activity & exercise.
+            </p>
+            <div class="bmr-subtext">
+                Base Resting BMR: <strong id="bmrDisplaySub" style="color:var(--text-primary);">1,600 kcal</strong>
             </div>
         </div>
 
-        <!-- Food Log & Energy Balance Tracker -->
+        <div class="chart-container">
+            <h3>Daily Calorie Deficit / Surplus Trend</h3>
+            <canvas id="calorieChart"></canvas>
+
+            <div class="weekly-summary-footer">
+                <span style="color:var(--text-secondary); font-weight:600;">This Week's Net Total (Mon–Sun):</span>
+                <span id="weeklyCalorieNetBadge" class="meta-pill" style="font-size:0.82rem; background:rgba(16, 185, 129, 0.2); color:var(--success); border:1px solid var(--success);">
+                    0 kcal
+                </span>
+            </div>
+        </div>
+
         <div class="food-log-section">
-            <div class="section-title" style="margin-bottom:10px;">Daily Energy Balance Tracker</div>
+            <div class="section-title" style="margin-bottom:6px;">Daily Energy Balance Tracker</div>
             
             <div class="daily-calorie-summary">
                 <div class="calorie-breakdown-row">
@@ -979,6 +1049,15 @@
                 <div id="endOfDayStatusBadge" class="status-badge status-deficit">
                     🔥 End-of-Day Status: Calorie Deficit (-2,200 kcal)
                 </div>
+            </div>
+
+            <!-- Feature 3: Quick Add Preset Chips -->
+            <div class="food-presets-scroll">
+                <button class="food-preset-chip" onclick="quickAddPresetFood('2 large eggs')">+ 2 Eggs (140 cal)</button>
+                <button class="food-preset-chip" onclick="quickAddPresetFood('Protein shake scoop')">+ Protein Shake (130 cal)</button>
+                <button class="food-preset-chip" onclick="quickAddPresetFood('1 medium banana')">+ Banana (105 cal)</button>
+                <button class="food-preset-chip" onclick="quickAddPresetFood('White rice portion')">+ Rice (200 cal)</button>
+                <button class="food-preset-chip" onclick="quickAddPresetFood('Grilled chicken breast')">+ Chicken Breast (165 cal)</button>
             </div>
 
             <div class="food-input-row">
@@ -1145,6 +1224,46 @@
         let workoutStartTime = null;
         let runningTimerInterval = null;
 
+        // Feature 5: Real-time Session Recovery Safeguard
+        function saveSessionSafeguard() {
+            if (currentActiveRoutine) {
+                const sessionData = {
+                    routine: currentActiveRoutine,
+                    state: activeWorkoutState,
+                    startTime: workoutStartTime
+                };
+                sessionStorage.setItem('active_session_safeguard', JSON.stringify(sessionData));
+            } else {
+                sessionStorage.removeItem('active_session_safeguard');
+            }
+        }
+
+        function checkSessionSafeguardRestore() {
+            const saved = sessionStorage.getItem('active_session_safeguard');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.routine && data.state) {
+                        currentActiveRoutine = data.routine;
+                        activeWorkoutState = data.state;
+                        workoutStartTime = data.startTime;
+
+                        document.getElementById('workoutSelector').style.display = 'none';
+                        document.getElementById('activeWorkspace').style.display = 'block';
+                        document.getElementById('activeRoutineName').textContent = currentActiveRoutine + " Workout";
+
+                        clearInterval(runningTimerInterval);
+                        updateRunningTimerDisplay();
+                        runningTimerInterval = setInterval(updateRunningTimerDisplay, 1000);
+
+                        renderActiveExercises();
+                    }
+                } catch (e) {
+                    console.warn("Could not restore session safeguard:", e);
+                }
+            }
+        }
+
         function populateBiometricsFromHistory() {
             const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
             const weightInput = document.getElementById('bioWeightInput');
@@ -1284,9 +1403,10 @@
             const selectedMult = activityMultipliers[activity] || 1.375;
             const tdeeVal = Math.round(bmrRounded * selectedMult);
 
-            document.getElementById('bmrDisplay').textContent = `${bmrRounded} kcal`;
+            document.getElementById('tdeeDisplayMain').textContent = `${tdeeVal.toLocaleString()} kcal`;
+            document.getElementById('bmrDisplaySub').textContent = `${bmrRounded.toLocaleString()} kcal`;
             document.getElementById('selectedActivityLabel').textContent = activityLabels[activity];
-            document.getElementById('selectedTdeeVal').textContent = `${tdeeVal} kcal`;
+            document.getElementById('selectedTdeeVal').textContent = `${tdeeVal.toLocaleString()} kcal`;
 
             document.getElementById('calorieResults').style.display = 'block';
             renderFoodLog();
@@ -1315,6 +1435,11 @@
             }
 
             return 150 * quantity;
+        }
+
+        function quickAddPresetFood(text) {
+            document.getElementById('foodItemInput').value = text;
+            addFoodItem();
         }
 
         function addFoodItem() {
@@ -1377,19 +1502,61 @@
             return totalBurn;
         }
 
-        function getStoredTDEE() {
+        function getStoredTDEEAndBMR() {
             const bio = JSON.parse(localStorage.getItem('static_user_biometrics') || '{}');
             const weightLbs = getLatestWeightLbs();
             
-            if (!bio.height || !bio.age || !weightLbs) return 2200;
+            if (!bio.height || !bio.age || !weightLbs) {
+                return { bmr: 1600, tdee: 2200 };
+            }
 
             const weightKg = weightLbs * 0.45359237;
             const heightCm = bio.height * 2.54;
             const s = (bio.sex === 'male') ? 5 : -161;
-            const bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * bio.age) + s;
+            const bmr = Math.round((10 * weightKg) + (6.25 * heightCm) - (5 * bio.age) + s);
 
             const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, heavy: 1.725 };
-            return Math.round(bmr * (multipliers[bio.activity] || 1.375));
+            const tdee = Math.round(bmr * (multipliers[bio.activity] || 1.375));
+
+            return { bmr, tdee };
+        }
+
+        function getMondayOfWeek(d) {
+            const date = new Date(d);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(date.setDate(diff));
+        }
+
+        function calculateCurrentWeekCalorieNet(tdeeTarget) {
+            const monday = getMondayOfWeek(new Date());
+            const workoutHistory = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            
+            let weekNetDeficitOrSurplus = 0;
+
+            for (let i = 0; i < 7; i++) {
+                const currentDay = new Date(monday);
+                currentDay.setDate(monday.getDate() + i);
+
+                const dateKey = 'food_log_' + currentDay.toISOString().slice(0, 10);
+                const dateMatchStr = currentDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                const foodLog = JSON.parse(localStorage.getItem(dateKey) || '[]');
+                const foodCals = foodLog.reduce((sum, item) => sum + (item.calories || 0), 0);
+
+                let exerciseCals = 0;
+                workoutHistory.forEach(w => {
+                    if (w.date && w.date.includes(dateMatchStr)) {
+                        exerciseCals += (w.estimatedCalories || 0);
+                    }
+                });
+
+                const dayNetIntake = foodCals - exerciseCals;
+                const dayVsTdee = dayNetIntake - tdeeTarget;
+                weekNetDeficitOrSurplus += dayVsTdee;
+            }
+
+            return weekNetDeficitOrSurplus;
         }
 
         function renderFoodLog() {
@@ -1414,7 +1581,11 @@
                 `;
             });
 
-            const tdeeTarget = getStoredTDEE();
+            const { bmr, tdee: tdeeTarget } = getStoredTDEEAndBMR();
+            
+            document.getElementById('tdeeDisplayMain').textContent = `${tdeeTarget.toLocaleString()} kcal`;
+            document.getElementById('bmrDisplaySub').textContent = `${bmr.toLocaleString()} kcal`;
+
             const exerciseBurn = calculateTodayExerciseBurn();
             const netIntake = totalFood - exerciseBurn;
             const netBalanceVsTdee = netIntake - tdeeTarget;
@@ -1437,8 +1608,23 @@
 
             container.innerHTML = html || `<div style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding:8px;">No food items logged today yet.</div>`;
 
-            // Draw/refresh calorie trend chart
             drawCalorieTrendChart('calorieChart', tdeeTarget);
+
+            const weeklyNet = calculateCurrentWeekCalorieNet(tdeeTarget);
+            const weeklyBadge = document.getElementById('weeklyCalorieNetBadge');
+            if (weeklyBadge) {
+                if (weeklyNet <= 0) {
+                    weeklyBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                    weeklyBadge.style.color = 'var(--success)';
+                    weeklyBadge.style.border = '1px solid var(--success)';
+                    weeklyBadge.textContent = `🔥 Deficit: ${weeklyNet.toLocaleString()} kcal`;
+                } else {
+                    weeklyBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+                    weeklyBadge.style.color = 'var(--danger)';
+                    weeklyBadge.style.border = '1px solid var(--danger)';
+                    weeklyBadge.textContent = `📈 Surplus: +${weeklyNet.toLocaleString()} kcal`;
+                }
+            }
         }
 
         function drawCalorieTrendChart(canvasId, tdeeTarget) {
@@ -1450,7 +1636,6 @@
             canvas.height = 160;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Collect historical daily calorie logs
             const historyKeys = [];
             for (let i = 6; i >= 0; i--) {
                 const d = new Date();
@@ -1488,7 +1673,6 @@
             const graphHeight = canvas.height - padding * 2;
             const range = (maxVal - minVal) || 1;
 
-            // Draw horizontal target TDEE line
             const targetY = canvas.height - padding - ((tdeeTarget - minVal) / range) * graphHeight;
             ctx.beginPath();
             ctx.strokeStyle = '#3b82f6';
@@ -1504,7 +1688,6 @@
             ctx.textAlign = 'right';
             ctx.fillText(`Target TDEE (${tdeeTarget})`, canvas.width - padding, targetY - 4);
 
-            // Draw Net Calorie Line
             const points = dataPoints.map((pt, idx) => {
                 const x = padding + (idx / (dataPoints.length - 1 || 1)) * graphWidth;
                 const y = canvas.height - padding - ((pt.netCals - minVal) / range) * graphHeight;
@@ -1558,6 +1741,7 @@
             document.getElementById('summaryWorkspace').style.display = 'none';
 
             renderActiveExercises();
+            saveSessionSafeguard();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1623,6 +1807,18 @@
             return isNaN(parsed) ? 90 : parsed;
         }
 
+        // Feature 2: Stepper Load Function
+        function adjustExerciseWeight(exerciseName, delta) {
+            const weightInput = document.getElementById(`weight-${CSS.escape(exerciseName)}`);
+            if (weightInput) {
+                let currentVal = parseFloat(weightInput.value);
+                if (isNaN(currentVal)) currentVal = 0;
+                const newVal = Math.max(0, currentVal + delta);
+                weightInput.value = newVal;
+                saveStoredWeight(exerciseName, newVal);
+            }
+        }
+
         function generateExerciseCardHtml(ex) {
             if (!activeWorkoutState[ex.name]) {
                 activeWorkoutState[ex.name] = {
@@ -1658,7 +1854,11 @@
                     <div class="set-input-row">
                         <div class="input-group">
                             <label>Load (${unitLabel})</label>
-                            <input type="text" id="weight-${CSS.escape(ex.name)}" value="${currentWeight}">
+                            <div class="stepper-input-wrapper">
+                                <button class="stepper-btn" onclick="adjustExerciseWeight('${escapedName}', -5)">-5</button>
+                                <input type="text" id="weight-${CSS.escape(ex.name)}" value="${currentWeight}">
+                                <button class="stepper-btn" onclick="adjustExerciseWeight('${escapedName}', 5)">+5</button>
+                            </div>
                         </div>
                         <div class="input-group">
                             <label>${inputLabel}</label>
@@ -1752,6 +1952,7 @@
             if (activeWorkoutState[name]) {
                 activeWorkoutState[name].completed = !activeWorkoutState[name].completed;
                 renderActiveExercises();
+                saveSessionSafeguard();
             }
         }
 
@@ -1774,11 +1975,13 @@
 
             state.currentSet++;
             renderActiveExercises();
+            saveSessionSafeguard();
         }
 
         function updateMetconResult(name, val) {
             if (activeWorkoutState[name]) {
                 activeWorkoutState[name].result = val;
+                saveSessionSafeguard();
             }
         }
 
@@ -1789,6 +1992,7 @@
                 activeWorkoutState[name].plates = platesVal;
                 activeWorkoutState[name].reps = repsVal;
                 activeWorkoutState[name].result = `${platesVal || 0} Plates x ${repsVal || 0} Reps`;
+                saveSessionSafeguard();
             }
         }
 
@@ -1881,6 +2085,8 @@
             workoutStartTime = null;
             clearInterval(runningTimerInterval);
             resetTimer();
+
+            sessionStorage.removeItem('active_session_safeguard');
 
             document.getElementById('summaryWorkspace').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'none';
@@ -2140,6 +2346,7 @@
         }
 
         populateBiometricsFromHistory();
+        checkSessionSafeguardRestore();
     </script>
 </body>
 </html>

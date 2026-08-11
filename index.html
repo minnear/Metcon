@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Workout Tracker</title>
     
-    <!-- iOS Home Screen Icon Config -->
-    <link rel="apple-touch-icon" href="app-icon.png">
+    <!-- iOS Home Screen Icon Config (High-Res Fitness Icon) -->
+    <link rel="apple-touch-icon" href="https://img.icons8.com/isometric/512/dumbbell.png">
 
     <style>
         :root {
@@ -85,7 +85,6 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* Feature 1: Sticky/Floating Rest Timer Bar */
         .timer-bar-inline {
             position: sticky;
             top: 10px;
@@ -474,7 +473,6 @@
             border-color: var(--accent);
         }
 
-        /* Feature 2: Stepper Container */
         .stepper-input-wrapper {
             display: flex;
             align-items: center;
@@ -604,7 +602,6 @@
             margin-top: 20px;
         }
 
-        /* Feature 3: Quick Add Preset Chips */
         .food-presets-scroll {
             display: flex;
             gap: 6px;
@@ -886,9 +883,9 @@
 
             <div class="section-title">Select Today's Routine</div>
             <div class="select-workout-grid">
-                <div class="routine-card" onclick="startWorkout('Push')">
+                <div class="routine-card" onclick="startWorkout('Upper Body Push')">
                     <div class="routine-info">
-                        <h3>Push Workout</h3>
+                        <h3>Upper Body Push Workout</h3>
                         <p>Chest, Shoulders, Triceps + Metcon</p>
                     </div>
                     <div class="start-btn-icon">➔</div>
@@ -896,14 +893,14 @@
                 <div class="routine-card" onclick="startWorkout('Upper Body Pull')">
                     <div class="routine-info">
                         <h3>Upper Body Pull Workout</h3>
-                        <p>Lats, Back, Biceps + Metcon</p>
+                        <p>Back, Lats, Biceps + Metcon</p>
                     </div>
                     <div class="start-btn-icon">➔</div>
                 </div>
                 <div class="routine-card" onclick="startWorkout('Lower Body')">
                     <div class="routine-info">
                         <h3>Lower Body Workout</h3>
-                        <p>Squats, Lunges, Calves + Metcon</p>
+                        <p>Squats, curls extensions and calves</p>
                     </div>
                     <div class="start-btn-icon">➔</div>
                 </div>
@@ -922,7 +919,7 @@
             <div class="active-header">
                 <div class="active-title">
                     <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Active Session</span>
-                    <h2 id="activeRoutineName">Push Workout</h2>
+                    <h2 id="activeRoutineName">Upper Body Push Workout</h2>
                     <span id="activeRunningTimer" class="running-timer-badge">⏱️ 00:00</span>
                 </div>
                 <div class="active-actions">
@@ -932,7 +929,6 @@
                 </div>
             </div>
 
-            <!-- Sticky Rest Timer Bar -->
             <div id="inlineRestTimer" class="timer-bar-inline">
                 <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">
                     Rest Timer
@@ -1051,7 +1047,6 @@
                 </div>
             </div>
 
-            <!-- Feature 3: Quick Add Preset Chips -->
             <div class="food-presets-scroll">
                 <button class="food-preset-chip" onclick="quickAddPresetFood('2 large eggs')">+ 2 Eggs (140 cal)</button>
                 <button class="food-preset-chip" onclick="quickAddPresetFood('Protein shake scoop')">+ Protein Shake (130 cal)</button>
@@ -1130,12 +1125,13 @@
         ];
 
         const workoutData = {
-            "Push": {
+            "Upper Body Push": {
                 warmup: [
-                    { name: "Band Pull-Aparts & Arm Circles", reps: "15 reps x 2" },
-                    { name: "Incline Push-Up Warm-Up", reps: "12 reps x 2" }
+                    { name: "Assault Bike", reps: "1000m" },
+                    { name: "Bear Crawl & Crab Walk", reps: "20 steps forwards and back" },
+                    { name: "Dead Hangs", reps: "max hold" }
                 ],
-                primary: { name: "Barbell Bench Press", sets: 4, reps: "6-8", rest: "120s", defaultLoad: "135", unit: "lbs", inputType: "Reps" },
+                primary: { name: "Hammer Strength Incline Press", sets: 4, reps: "10", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
                 secondary: [
                     { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95", unit: "lbs", inputType: "Reps" },
                     { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
@@ -1224,7 +1220,6 @@
         let workoutStartTime = null;
         let runningTimerInterval = null;
 
-        // Feature 5: Real-time Session Recovery Safeguard
         function saveSessionSafeguard() {
             if (currentActiveRoutine) {
                 const sessionData = {
@@ -1807,7 +1802,6 @@
             return isNaN(parsed) ? 90 : parsed;
         }
 
-        // Feature 2: Stepper Load Function
         function adjustExerciseWeight(exerciseName, delta) {
             const weightInput = document.getElementById(`weight-${CSS.escape(exerciseName)}`);
             if (weightInput) {

@@ -998,7 +998,6 @@
             quoteTextEl.textContent = `"${rand.q}"`;
             quoteAuthorEl.textContent = `— ${rand.a}`;
         }
-        fetchZenQuote();
 
         const calorieDatabase = [
             { keywords: ["egg", "eggs"], caloriesPerUnit: 70 },
@@ -1111,6 +1110,23 @@
         let workoutStartTime = null;
         let runningTimerInterval = null;
 
+        // Auto-populate latest saved biometrics on init
+        function populateBiometricsFromHistory() {
+            const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
+            const weightInput = document.getElementById('bioWeightInput');
+            const waistInput = document.getElementById('bioWaistInput');
+
+            for (let i = biometrics.length - 1; i >= 0; i--) {
+                if (biometrics[i].weight && !weightInput.value) {
+                    weightInput.value = biometrics[i].weight;
+                }
+                if (biometrics[i].waist && !waistInput.value) {
+                    waistInput.value = biometrics[i].waist;
+                }
+                if (weightInput.value && waistInput.value) break;
+            }
+        }
+
         function getStoredWeight(exerciseName, fallback) {
             const weightsHistory = JSON.parse(localStorage.getItem('exercise_weights') || '{}');
             return weightsHistory[exerciseName] !== undefined ? weightsHistory[exerciseName] : (fallback || '');
@@ -1130,6 +1146,7 @@
             if (viewName === 'workouts') {
                 document.getElementById('viewWorkouts').classList.add('active');
                 document.getElementById('navWorkouts').classList.add('active');
+                populateBiometricsFromHistory();
             } else if (viewName === 'calories') {
                 document.getElementById('viewCalories').classList.add('active');
                 document.getElementById('navCalories').classList.add('active');
@@ -1176,8 +1193,6 @@
             localStorage.setItem('biometrics_history', JSON.stringify(biometricsHistory));
 
             alert("Biometrics saved successfully!");
-            document.getElementById('bioWeightInput').value = '';
-            document.getElementById('bioWaistInput').value = '';
         }
 
         function loadCalorieBiometrics() {
@@ -1956,6 +1971,9 @@
                 }, 1000);
             }
         }
+
+        // Run biometrics auto-population on script load
+        populateBiometricsFromHistory();
     </script>
 </body>
 </html>

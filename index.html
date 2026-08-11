@@ -388,7 +388,7 @@
         .exercise-card.completed-exercise {
             background-color: var(--completed-bg);
             border-color: var(--success);
-            order: 99; /* Moves completed exercise to bottom */
+            order: 99;
         }
 
         .exercise-top-row {
@@ -1311,6 +1311,7 @@
             const restSeconds = parseRestSeconds(ex.rest);
             const unitLabel = ex.unit || 'lbs';
             const inputLabel = ex.inputType || 'Reps';
+            const escapedName = ex.name.replace(/'/g, "\\'");
 
             let html = `
                 <div class="exercise-card ${isFinished ? 'completed-exercise' : ''}" id="card-${CSS.escape(ex.name)}">
@@ -1334,8 +1335,8 @@
                             <label>${inputLabel}</label>
                             <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
                         </div>
-                        <button class="accept-set-btn" onclick="acceptSet('${ex.name}', '${unitLabel}')" title="Log Set">✓</button>
-                        <button class="trigger-rest-btn" id="restBtn-${CSS.escape(ex.name)}" onclick="startRestForExercise(${restSeconds}, '${CSS.escape(ex.name)}')" title="Start ${restSeconds}s Rest">💤</button>
+                        <button class="accept-set-btn" onclick="acceptSet('${escapedName}', '${unitLabel}')" title="Log Set">✓</button>
+                        <button class="trigger-rest-btn" id="restBtn-${CSS.escape(ex.name)}" onclick="startRestForExercise(${restSeconds}, '${escapedName}')" title="Start ${restSeconds}s Rest">💤</button>
                     </div>
                 `;
             }
@@ -1408,8 +1409,8 @@
             const weightInput = document.getElementById(`weight-${CSS.escape(exerciseName)}`);
             const repsInput = document.getElementById(`reps-${CSS.escape(exerciseName)}`);
 
-            const weight = weightInput.value ? weightInput.value : "N/A";
-            const reps = repsInput.value ? repsInput.value : "N/A";
+            const weight = weightInput ? weightInput.value : "N/A";
+            const reps = repsInput ? repsInput.value : "N/A";
 
             saveStoredWeight(exerciseName, weight);
 
@@ -1686,7 +1687,7 @@
             }, 1500);
         }
 
-        function startRestForExercise(seconds, btnElementId) {
+        function startRestForExercise(seconds, exerciseName) {
             const targetSeconds = seconds || 90;
             selectedInterval = targetSeconds;
             
@@ -1694,8 +1695,8 @@
             clearRestBtnPulse();
             document.getElementById('inlineRestTimer').classList.remove('flash-active');
 
-            if (btnElementId) {
-                activeRestBtnId = `restBtn-${btnElementId}`;
+            if (exerciseName) {
+                activeRestBtnId = `restBtn-${CSS.escape(exerciseName)}`;
                 const btn = document.getElementById(activeRestBtnId);
                 if (btn) btn.classList.add('rest-btn-pulsing');
             }

@@ -624,6 +624,28 @@
             margin-top: 4px;
         }
 
+        .status-badge {
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .status-badge.status-deficit {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-badge.status-surplus {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
         .food-list-container {
             display: flex;
             flex-direction: column;
@@ -898,24 +920,29 @@
             
             <div class="daily-calorie-summary">
                 <div class="calorie-breakdown-row">
-                    <span>Target TDEE:</span>
-                    <strong id="summaryTdeeTarget">0 kcal</strong>
+                    <span>Baseline Burn (Target TDEE):</span>
+                    <strong id="summaryTdeeTarget">2,200 kcal</strong>
                 </div>
                 <div class="calorie-breakdown-row">
-                    <span>+ Ingested Food:</span>
+                    <span>+ Food Ingested:</span>
                     <strong id="summaryFoodIngested" style="color:var(--accent);">+0 kcal</strong>
                 </div>
                 <div class="calorie-breakdown-row">
-                    <span>- Exercise Burned:</span>
+                    <span>- Exercise Burned (Given Back):</span>
                     <strong id="summaryExerciseBurned" style="color:var(--success);">-0 kcal</strong>
                 </div>
 
                 <div class="net-calorie-total-row">
                     <div>
-                        <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Net Calories vs TDEE</span>
-                        <strong id="todayCalorieTotal" style="font-size:1.4rem; color:var(--accent);">0 kcal</strong>
+                        <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Net Intake (Food - Exercise)</span>
+                        <strong id="todayNetIntake" style="font-size:1.3rem; color:var(--accent);">0 kcal</strong>
                     </div>
                     <button onclick="clearTodayFoodLog()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;">Clear Food Log</button>
+                </div>
+
+                <!-- End-of-Day Indication Badge -->
+                <div id="endOfDayStatusBadge" class="status-badge status-deficit">
+                    🔥 End-of-Day Status: Calorie Deficit (-2,200 kcal)
                 </div>
             </div>
 
@@ -944,7 +971,6 @@
     </div>
 
     <script>
-        // Dynamic ZenQuotes API fetch with offline fallback
         async function fetchZenQuote() {
             const quoteTextEl = document.getElementById('quoteText');
             const quoteAuthorEl = document.getElementById('quoteAuthor');
@@ -1297,7 +1323,7 @@
             const bio = JSON.parse(localStorage.getItem('static_user_biometrics') || '{}');
             const weightLbs = getLatestWeightLbs();
             
-            if (!bio.height || !bio.age || !weightLbs) return 2000;
+            if (!bio.height || !bio.age || !weightLbs) return 2200;
 
             const weightKg = weightLbs * 0.45359237;
             const heightCm = bio.height * 2.54;
@@ -1312,6 +1338,7 @@
             const todayKey = 'food_log_' + new Date().toISOString().slice(0,10);
             const dailyLog = JSON.parse(localStorage.getItem(todayKey) || '[]');
             const container = document.getElementById('foodList');
+            const statusBadge = document.getElementById('endOfDayStatusBadge');
             
             let totalFood = 0;
             let html = '';
@@ -1331,12 +1358,24 @@
 
             const tdeeTarget = getStoredTDEE();
             const exerciseBurn = calculateTodayExerciseBurn();
-            const netCalories = tdeeTarget + totalFood - exerciseBurn;
+            const netIntake = totalFood - exerciseBurn;
+            const netBalanceVsTdee = netIntake - tdeeTarget;
 
-            document.getElementById('summaryTdeeTarget').textContent = `${tdeeTarget} kcal`;
-            document.getElementById('summaryFoodIngested').textContent = `+${totalFood} kcal`;
-            document.getElementById('summaryExerciseBurned').textContent = `-${exerciseBurn} kcal`;
-            document.getElementById('todayCalorieTotal').textContent = `${netCalories} kcal`;
+            document.getElementById('summaryTdeeTarget').textContent = `${tdeeTarget.toLocaleString()} kcal`;
+            document.getElementById('summaryFoodIngested').textContent = `+${totalFood.toLocaleString()} kcal`;
+            document.getElementById('summaryExerciseBurned').textContent = `-${exerciseBurn.toLocaleString()} kcal`;
+            document.getElementById('todayNetIntake').textContent = `${netIntake.toLocaleString()} kcal`;
+
+            if (netBalanceVsTdee < 0) {
+                statusBadge.className = 'status-badge status-deficit';
+                statusBadge.textContent = `🔥 End-of-Day Status: Calorie Deficit (${netBalanceVsTdee.toLocaleString()} kcal)`;
+            } else if (netBalanceVsTdee === 0) {
+                statusBadge.className = 'status-badge status-deficit';
+                statusBadge.textContent = `⚖️ End-of-Day Status: At Target Maintenance`;
+            } else {
+                statusBadge.className = 'status-badge status-surplus';
+                statusBadge.textContent = `📈 End-of-Day Status: Calorie Surplus (+${netBalanceVsTdee.toLocaleString()} kcal)`;
+            }
 
             container.innerHTML = html || `<div style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding:8px;">No food items logged today yet.</div>`;
         }

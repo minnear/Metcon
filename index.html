@@ -18,6 +18,7 @@
             --border: #2e2e38;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --completed-bg: rgba(16, 185, 129, 0.15);
         }
 
@@ -684,19 +685,49 @@
         .history-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 8px;
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
         }
 
+        .history-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .history-routine {
             font-weight: 700;
             color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .history-meta-badges {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .meta-pill {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #2e2e38;
+            color: var(--text-primary);
+        }
+
+        .meta-pill.meta-burn {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.4);
         }
 
         .history-date {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-secondary);
         }
 
@@ -837,7 +868,6 @@
                 </div>
             </div>
 
-            <!-- Dynamic Rest Timer Bar -->
             <div id="inlineRestTimer" class="timer-bar-inline">
                 <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">
                     Rest Timer
@@ -903,6 +933,12 @@
             <button class="save-bio-btn" style="background: var(--accent);" onclick="calculateCalories()">Calculate BMR & TDEE</button>
         </div>
 
+        <!-- Calorie Balance Trend Chart -->
+        <div class="chart-container">
+            <h3>Daily Calorie Deficit / Surplus Trend</h3>
+            <canvas id="calorieChart"></canvas>
+        </div>
+
         <div id="calorieResults" style="display:none;" class="calc-result-box">
             <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700;">Basal Metabolic Rate (BMR)</div>
             <div id="bmrDisplay" class="bmr-number">0 kcal</div>
@@ -940,7 +976,6 @@
                     <button onclick="clearTodayFoodLog()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;">Clear Food Log</button>
                 </div>
 
-                <!-- End-of-Day Indication Badge -->
                 <div id="endOfDayStatusBadge" class="status-badge status-deficit">
                     🔥 End-of-Day Status: Calorie Deficit (-2,200 kcal)
                 </div>
@@ -1110,7 +1145,6 @@
         let workoutStartTime = null;
         let runningTimerInterval = null;
 
-        // Auto-populate latest saved biometrics on init
         function populateBiometricsFromHistory() {
             const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
             const weightInput = document.getElementById('bioWeightInput');
@@ -1324,11 +1358,20 @@
         function calculateTodayExerciseBurn() {
             const history = JSON.parse(localStorage.getItem('workout_history') || '[]');
             const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            
+            const weightLbs = getLatestWeightLbs();
+            const weightKg = weightLbs * 0.45359237;
+
             let totalBurn = 0;
             history.forEach(item => {
                 if (item.date && item.date.includes(todayStr)) {
-                    totalBurn += (item.estimatedCalories || 0);
+                    if (item.estimatedCalories && item.estimatedCalories > 0) {
+                        totalBurn += item.estimatedCalories;
+                    } else if (item.duration) {
+                        const mins = parseInt(item.duration) || 30;
+                        const calcBurn = Math.round(6.0 * 3.5 * weightKg / 200 * mins);
+                        item.estimatedCalories = calcBurn;
+                        totalBurn += calcBurn;
+                    }
                 }
             });
             return totalBurn;
@@ -1393,6 +1436,111 @@
             }
 
             container.innerHTML = html || `<div style="text-align:center; font-size:0.8rem; color:var(--text-secondary); padding:8px;">No food items logged today yet.</div>`;
+
+            // Draw/refresh calorie trend chart
+            drawCalorieTrendChart('calorieChart', tdeeTarget);
+        }
+
+        function drawCalorieTrendChart(canvasId, tdeeTarget) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.parentElement.clientWidth - 32;
+            canvas.height = 160;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Collect historical daily calorie logs
+            const historyKeys = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                historyKeys.push({
+                    dateKey: 'food_log_' + d.toISOString().slice(0, 10),
+                    label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    dateMatchStr: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                });
+            }
+
+            const workoutHistory = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            const dataPoints = historyKeys.map(k => {
+                const foodLog = JSON.parse(localStorage.getItem(k.dateKey) || '[]');
+                const foodCals = foodLog.reduce((sum, item) => sum + (item.calories || 0), 0);
+
+                let exerciseCals = 0;
+                workoutHistory.forEach(w => {
+                    if (w.date && w.date.includes(k.dateMatchStr)) {
+                        exerciseCals += (w.estimatedCalories || 0);
+                    }
+                });
+
+                return {
+                    label: k.label,
+                    netCals: foodCals - exerciseCals
+                };
+            });
+
+            const values = dataPoints.map(d => d.netCals);
+            const maxVal = Math.max(...values, tdeeTarget + 400);
+            const minVal = Math.min(...values, 0);
+            const padding = 30;
+            const graphWidth = canvas.width - padding * 2;
+            const graphHeight = canvas.height - padding * 2;
+            const range = (maxVal - minVal) || 1;
+
+            // Draw horizontal target TDEE line
+            const targetY = canvas.height - padding - ((tdeeTarget - minVal) / range) * graphHeight;
+            ctx.beginPath();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(padding, targetY);
+            ctx.lineTo(canvas.width - padding, targetY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#3b82f6';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(`Target TDEE (${tdeeTarget})`, canvas.width - padding, targetY - 4);
+
+            // Draw Net Calorie Line
+            const points = dataPoints.map((pt, idx) => {
+                const x = padding + (idx / (dataPoints.length - 1 || 1)) * graphWidth;
+                const y = canvas.height - padding - ((pt.netCals - minVal) / range) * graphHeight;
+                return { x, y, netCals: pt.netCals, label: pt.label };
+            });
+
+            ctx.beginPath();
+            ctx.lineWidth = 2.5;
+            points.forEach((pt, idx) => {
+                const isDeficit = pt.netCals <= tdeeTarget;
+                ctx.strokeStyle = isDeficit ? '#10b981' : '#ef4444';
+                if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+
+            points.forEach(pt => {
+                const isDeficit = pt.netCals <= tdeeTarget;
+                const ptColor = isDeficit ? '#10b981' : '#ef4444';
+
+                ctx.beginPath();
+                ctx.fillStyle = '#121214';
+                ctx.strokeStyle = ptColor;
+                ctx.lineWidth = 2;
+                ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#f4f4f6';
+                ctx.font = '10px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${pt.netCals}k`, pt.x, pt.y - 8);
+
+                ctx.fillStyle = '#9ca3af';
+                ctx.fillText(pt.label, pt.x, canvas.height - 8);
+            });
         }
 
         function startWorkout(routineName) {
@@ -1750,8 +1898,10 @@
 
         function renderHistoryAndTrends() {
             const container = document.getElementById('historyContainer');
-            const history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            let history = JSON.parse(localStorage.getItem('workout_history') || '[]');
             const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
+            const weightLbs = getLatestWeightLbs();
+            const weightKg = weightLbs * 0.45359237;
 
             drawLineChart('weightChart', biometrics, 'weight', '#3b82f6');
             drawLineChart('waistChart', biometrics, 'waist', '#10b981');
@@ -1761,16 +1911,33 @@
                 return;
             }
 
+            let historyUpdated = false;
+            history.forEach(item => {
+                if (item.estimatedCalories === undefined || item.estimatedCalories === null) {
+                    const mins = parseInt(item.duration) || 30;
+                    item.estimatedCalories = Math.round(6.0 * 3.5 * weightKg / 200 * mins);
+                    historyUpdated = true;
+                }
+            });
+            if (historyUpdated) {
+                localStorage.setItem('workout_history', JSON.stringify(history));
+            }
+
             let html = '';
             history.forEach(item => {
-                const durationBadge = item.duration ? ` • ⏱️ ${item.duration}` : '';
-                const calBadge = item.estimatedCalories ? ` • 🔥 ~${item.estimatedCalories} kcal` : '';
+                const durationText = item.duration || '30 mins';
+                const burnCals = item.estimatedCalories !== undefined ? item.estimatedCalories : 250;
+
                 html += `
                     <div class="history-card">
                         <div class="history-header">
-                            <div>
+                            <div class="history-title-group">
                                 <span class="history-routine">${item.routine} Workout</span>
-                                <div class="history-date">${item.date}${durationBadge}${calBadge}</div>
+                                <div class="history-date">${item.date}</div>
+                                <div class="history-meta-badges">
+                                    <span class="meta-pill">⏱️ ${durationText}</span>
+                                    <span class="meta-pill meta-burn">🔥 ~${burnCals} kcal</span>
+                                </div>
                             </div>
                             <button class="delete-history-btn" onclick="deleteWorkoutRecord(${item.id})" title="Delete Workout">🗑️</button>
                         </div>
@@ -1972,7 +2139,6 @@
             }
         }
 
-        // Run biometrics auto-population on script load
         populateBiometricsFromHistory();
     </script>
 </body>

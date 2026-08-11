@@ -362,11 +362,18 @@
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 12px 14px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .warmup-card.completed-warmup {
+            background-color: var(--completed-bg);
+            border-color: var(--success);
         }
 
         .warmup-title {
@@ -900,7 +907,7 @@
                 <div class="routine-card" onclick="startWorkout('Lower Body')">
                     <div class="routine-info">
                         <h3>Lower Body Workout</h3>
-                        <p>Squats, curls extensions and calves</p>
+                        <p>Squats, Curls, Extensions, Calves + Metcon</p>
                     </div>
                     <div class="start-btn-icon">➔</div>
                 </div>
@@ -1001,7 +1008,7 @@
                 BMR (calories burned at rest) combined with calories expended during daily activity & exercise.
             </p>
             <div class="bmr-subtext">
-                Base Resting BMR: <strong id="bmrDisplaySub" style="color:var(--text-primary);">1,600 kcal</strong>
+                Base Resting BMR: <strong id="bmrDisplaySub" style="color: var(--accent); font-weight: 800;">1,600 kcal</strong>
             </div>
         </div>
 
@@ -1137,7 +1144,16 @@
                     { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
                     { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35", unit: "lbs", inputType: "Reps" }
                 ],
-                metcon: { name: "Assault Bike Sprints (EMOM 8 Min)", sets: 1, reps: "30s Work", rest: "30s", notes: "Goal: Maintain high RPM across rounds.", isMetcon: true }
+                metcon: { 
+                    name: "Farmers Carry Alternating Hands", 
+                    sets: 1, 
+                    reps: "10 mins", 
+                    rest: "Minimal", 
+                    suggestedPlates: "",
+                    suggestedReps: "",
+                    notes: "Maintain steady posture and alternate hands continuously.",
+                    isMetcon: true 
+                }
             },
             "Upper Body Pull": {
                 warmup: [
@@ -1668,6 +1684,13 @@
             const graphHeight = canvas.height - padding * 2;
             const range = (maxVal - minVal) || 1;
 
+            // Draw Y-Axis Unit Label (kcal)
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('kcal', 8, padding - 12);
+
+            // Draw horizontal target TDEE line
             const targetY = canvas.height - padding - ((tdeeTarget - minVal) / range) * graphHeight;
             ctx.beginPath();
             ctx.strokeStyle = '#3b82f6';
@@ -1714,7 +1737,8 @@
                 ctx.fillStyle = '#f4f4f6';
                 ctx.font = '10px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(`${pt.netCals}k`, pt.x, pt.y - 8);
+                // Render raw number without "k" suffix
+                ctx.fillText(`${pt.netCals}`, pt.x, pt.y - 8);
 
                 ctx.fillStyle = '#9ca3af';
                 ctx.fillText(pt.label, pt.x, canvas.height - 8);
@@ -1750,16 +1774,33 @@
             if (badge) badge.textContent = formatted;
         }
 
+        function toggleWarmupCheck(warmupIdx) {
+            if (!activeWorkoutState.warmups) {
+                activeWorkoutState.warmups = {};
+            }
+            activeWorkoutState.warmups[warmupIdx] = !activeWorkoutState.warmups[warmupIdx];
+            renderActiveExercises();
+            saveSessionSafeguard();
+        }
+
         function renderActiveExercises() {
             const container = document.getElementById('activeExercisesContainer');
             const routine = workoutData[currentActiveRoutine];
 
+            if (!activeWorkoutState.warmups) {
+                activeWorkoutState.warmups = {};
+            }
+
             let html = `<div class="card-group"><div class="section-title">🔥 Warm-Up</div>`;
-            routine.warmup.forEach((ex) => { 
+            routine.warmup.forEach((ex, idx) => { 
+                const isWarmupDone = !!activeWorkoutState.warmups[idx];
                 html += `
-                    <div class="warmup-card">
+                    <div class="warmup-card ${isWarmupDone ? 'completed-warmup' : ''}" onclick="toggleWarmupCheck(${idx})">
                         <span class="warmup-title">${ex.name}</span>
-                        <span class="warmup-target">${ex.reps}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="warmup-target">${ex.reps}</span>
+                            ${isWarmupDone ? `<span class="set-badge completed-badge" style="font-size:0.7rem;">Completed ✓</span>` : ''}
+                        </div>
                     </div>
                 `; 
             });
@@ -2009,6 +2050,7 @@
             let html = '';
 
             for (const [name, state] of Object.entries(activeWorkoutState)) {
+                if (name === 'warmups') continue;
                 html += `<div class="summary-exercise-block"><h4>${name}</h4>`;
                 if (state.isMetcon) {
                     html += `<div>Result: ${state.result ? state.result : (state.completed ? 'Completed ✓' : 'Not logged yet')}</div>`;
@@ -2044,6 +2086,7 @@
 
             const exerciseRows = [];
             for (const [name, state] of Object.entries(activeWorkoutState)) {
+                if (name === 'warmups') continue;
                 if (state.isMetcon) {
                     exerciseRows.push({ name, details: `Result: ${state.result ? state.result : (state.completed ? 'Completed ✓' : 'Logged')}` });
                 } else {

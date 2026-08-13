@@ -559,6 +559,20 @@
             color: var(--text-primary);
         }
 
+        .summary-exercise-block {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .summary-exercise-block h4 {
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
         .calc-result-box {
             background: linear-gradient(135deg, #1e1e24, #2a2a38);
             border: 1px solid var(--accent);
@@ -953,11 +967,7 @@
                 </div>
             </div>
 
-            <div id="summaryWorkspace">
-                <div class="summary-header">
-                    <h2>Workout Progress So Far</h2>
-                    <button class="back-to-workout-btn" onclick="toggleWorkoutSummary(false)">Back to Workout</button>
-                </div>
+            <div id="summaryWorkspace" style="display: none;">
                 <div id="liveSummaryContent"></div>
             </div>
 

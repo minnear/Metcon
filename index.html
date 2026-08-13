@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Workout Tracker</title>
     
-    <!-- iOS Home Screen Icon Config (High-Res Fitness Icon) -->
-    <link rel="apple-touch-icon" href="https://img.icons8.com/isometric/512/dumbbell.png">
+    <!-- iOS Home Screen Icon Config (High-Res Fitness Icon with cache buster) -->
+    <link rel="apple-touch-icon" href="https://img.icons8.com/isometric/512/dumbbell.png?v=2">
 
     <style>
         :root {
@@ -1007,6 +1007,22 @@
             <button class="save-bio-btn" style="background: var(--accent);" onclick="calculateCalories()">Calculate BMR & TDEE</button>
         </div>
 
+        <div class="biometrics-card" style="border-color: var(--accent);">
+            <div class="section-title" style="margin-bottom: 4px;">FatSecret Platform API Credentials</div>
+            <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:8px;">Enter your FatSecret Developer keys to power dynamic nutrition searches directly from FatSecret's official food database.</p>
+            <div class="biometrics-grid">
+                <div class="bio-input-group">
+                    <label>Client ID / Consumer Key</label>
+                    <input type="text" id="fatsecretClientId" placeholder="e.g. 9a1a6fd1..." style="text-align:left; font-size:0.8rem;">
+                </div>
+                <div class="bio-input-group">
+                    <label>Client Secret / Shared Secret</label>
+                    <input type="password" id="fatsecretClientSecret" placeholder="e.g. sAyYTJiI..." style="text-align:left; font-size:0.8rem;">
+                </div>
+            </div>
+            <button class="save-bio-btn" style="background:#2e2e38; margin-top:8px;" onclick="saveFatSecretCredentials()">Save API Credentials</button>
+        </div>
+
         <div id="calorieResults" class="calc-result-box">
             <div style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; font-weight:800; letter-spacing:0.5px;">Target Total Daily Energy Expenditure (TDEE)</div>
             <div id="tdeeDisplayMain" class="tdee-main-number">2,200 kcal</div>
@@ -1154,9 +1170,13 @@
                 ],
                 primary: { name: "Hammer Strength Incline Press", sets: 4, reps: "10", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
                 secondary: [
-                    { name: "Standing Overhead Press", sets: 3, reps: "8-10", rest: "90s", defaultLoad: "95", unit: "lbs", inputType: "Reps" },
-                    { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", rest: "90s", defaultLoad: "50", unit: "lbs", inputType: "Reps" },
-                    { name: "Tricep Overhead Extension", sets: 3, reps: "12-15", rest: "60s", defaultLoad: "35", unit: "lbs", inputType: "Reps" }
+                    { name: "Hammer Strength Shoulder Press", sets: 3, reps: "10", rest: "90s", defaultLoad: "35", unit: "lbs", inputType: "Reps" },
+                    { name: "Dumbbell Flat Bench", sets: 3, reps: "12", rest: "90s", defaultLoad: "25", unit: "lbs", inputType: "Reps" },
+                    { name: "Dip Machine", sets: 3, reps: "12", rest: "60s", defaultLoad: "130", unit: "lbs", inputType: "Reps" },
+                    { name: "Tricep Cable Kickdown", sets: 3, reps: "15", rest: "60s", defaultLoad: "20", unit: "lbs", inputType: "Reps" },
+                    { name: "Decline Cable Fly", sets: 3, reps: "10", rest: "60s", defaultLoad: "15", unit: "lbs", inputType: "Reps" },
+                    { name: "Back Extension Machine", sets: 3, reps: "15", rest: "60s", defaultLoad: "145", unit: "lbs", inputType: "Reps" },
+                    { name: "Side Planks", sets: 2, reps: "max hold", rest: "90s", defaultLoad: "10", unit: "sec", inputType: "Time" }
                 ],
                 metcon: { 
                     name: "Farmers Carry Alternating Hands", 
@@ -1177,7 +1197,7 @@
                 ],
                 primary: { name: "Hammer Strength Pulldown", sets: 4, reps: "8", rest: "90s", defaultLoad: "55", unit: "lbs", inputType: "Reps" },
                 secondary: [
-                    { name: "Cable Row", sets: 3, reps: "12", rest: "90s", defaultLoad: "70", unit: "lbs", inputType: "Reps" },
+                    { name: "Seated Cable Row", sets: 3, reps: "12", rest: "90s", defaultLoad: "70", unit: "lbs", inputType: "Reps" },
                     { name: "Dumbbell High Pull", sets: 3, reps: "8", rest: "60s", defaultLoad: "60", unit: "lbs", inputType: "Reps" },
                     { name: "Single Arm Barbell Row", sets: 3, reps: "12", rest: "60s", defaultLoad: "30", unit: "lbs", inputType: "Reps" },
                     { name: "Dumbbell Y-T-W Inclined", sets: 3, reps: "5", rest: "60s", defaultLoad: "5", unit: "lbs", inputType: "Reps" },
@@ -1249,6 +1269,114 @@
         let activeWorkoutState = {};
         let workoutStartTime = null;
         let runningTimerInterval = null;
+
+        function saveFatSecretCredentials() {
+            const cid = document.getElementById('fatsecretClientId').value.trim();
+            const sec = document.getElementById('fatsecretClientSecret').value.trim();
+            if (cid && sec) {
+                localStorage.setItem('fatsecret_client_id', cid);
+                localStorage.setItem('fatsecret_client_secret', sec);
+                alert("FatSecret API Credentials saved successfully!");
+            } else {
+                alert("Please enter both Client ID and Client Secret.");
+            }
+        }
+
+        function loadFatSecretCredentials() {
+            const cid = localStorage.getItem('fatsecret_client_id');
+            const sec = localStorage.getItem('fatsecret_client_secret');
+            if (cid) document.getElementById('fatsecretClientId').value = cid;
+            if (sec) document.getElementById('fatsecretClientSecret').value = sec;
+        }
+
+        async function getFatSecretAccessToken(clientId, clientSecret) {
+            const cachedToken = sessionStorage.getItem('fatsecret_bearer_token');
+            if (cachedToken) return cachedToken;
+
+            try {
+                const authHeader = btoa(`${clientId}:${clientSecret}`);
+                const tokenUrl = `https://oauth.fatsecret.com/connect/token`;
+                const params = new URLSearchParams();
+                params.append('grant_type', 'client_credentials');
+                params.append('scope', 'basic');
+
+                const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(tokenUrl)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Basic ${authHeader}`
+                    },
+                    body: params
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.access_token) {
+                        sessionStorage.setItem('fatsecret_bearer_token', data.access_token);
+                        return data.access_token;
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not obtain FatSecret Bearer Token:", err);
+            }
+            return null;
+        }
+
+        async function fetchExternalCalorieData(inputText) {
+            const rawText = inputText.toLowerCase().trim();
+
+            let quantity = 1;
+            const qtyMatch = rawText.match(/^(\d+(\.\d+)?)/);
+            if (qtyMatch) {
+                quantity = parseFloat(qtyMatch[1]);
+            }
+
+            const searchQuery = rawText.replace(/^(\d+(\.\d+)?)\s*/, '');
+
+            const cid = localStorage.getItem('fatsecret_client_id');
+            const sec = localStorage.getItem('fatsecret_client_secret');
+
+            if (cid && sec) {
+                const token = await getFatSecretAccessToken(cid, sec);
+                if (token) {
+                    try {
+                        const searchUrl = `https://platform.fatsecret.com/rest/server.api?method=foods.search&search_expression=${encodeURIComponent(searchQuery)}&format=json`;
+                        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.foods && data.foods.food) {
+                                let foodList = Array.isArray(data.foods.food) ? data.foods.food : [data.foods.food];
+                                if (foodList.length > 0) {
+                                    const desc = foodList[0].food_description || "";
+                                    const calMatch = desc.match(/Calories:\s*(\d+)kcal/i) || desc.match(/(\d+)\s*kcal/i);
+                                    if (calMatch) {
+                                        return Math.round(parseInt(calMatch[1]) * quantity);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn("FatSecret API search error, using fallback estimator:", err);
+                    }
+                }
+            }
+
+            for (let item of calorieDatabase) {
+                for (let kw of item.keywords) {
+                    if (rawText.includes(kw)) {
+                        return Math.round(item.caloriesPerUnit * quantity);
+                    }
+                }
+            }
+
+            return Math.round(150 * quantity);
+        }
 
         function saveSessionSafeguard() {
             if (currentActiveRoutine) {
@@ -1329,6 +1457,7 @@
                 document.getElementById('viewCalories').classList.add('active');
                 document.getElementById('navCalories').classList.add('active');
                 loadCalorieBiometrics();
+                loadFatSecretCredentials();
                 renderFoodLog();
             } else {
                 document.getElementById('viewHistory').classList.add('active');
@@ -1437,43 +1566,25 @@
             renderFoodLog();
         }
 
-        function estimateCalories(inputText) {
-            const text = inputText.toLowerCase();
-            
-            const explicitMatch = text.match(/(\d+)\s*(kcal|calories|cal)/);
-            if (explicitMatch) {
-                return parseInt(explicitMatch[1]);
-            }
-
-            let quantity = 1;
-            const qtyMatch = text.match(/^(\d+)/);
-            if (qtyMatch) {
-                quantity = parseInt(qtyMatch[1]);
-            }
-
-            for (let item of calorieDatabase) {
-                for (let kw of item.keywords) {
-                    if (text.includes(kw)) {
-                        return item.caloriesPerUnit * quantity;
-                    }
-                }
-            }
-
-            return 150 * quantity;
-        }
-
-        function quickAddPresetFood(text) {
+        async function quickAddPresetFood(text) {
             document.getElementById('foodItemInput').value = text;
-            addFoodItem();
+            await addFoodItem();
         }
 
-        function addFoodItem() {
+        async function addFoodItem() {
             const input = document.getElementById('foodItemInput');
             const itemText = input.value.trim();
 
             if (!itemText) return;
 
-            const estimatedCals = estimateCalories(itemText);
+            let estimatedCals = 0;
+            const explicitMatch = itemText.match(/(\d+)\s*(kcal|calories|cal)/i);
+            if (explicitMatch) {
+                estimatedCals = parseInt(explicitMatch[1]);
+            } else {
+                estimatedCals = await fetchExternalCalorieData(itemText);
+            }
+
             const foodRecord = {
                 id: Date.now(),
                 text: itemText,
@@ -1654,7 +1765,6 @@
             }
 
             if (weeklyProjBadge) {
-                // 3500 kcal deficit roughly equals 1.0 lb of fat loss
                 const projectedLbsChange = (weeklyNet / 3500).toFixed(1);
                 if (weeklyNet <= 0) {
                     weeklyProjBadge.style.background = 'rgba(16, 185, 129, 0.2)';

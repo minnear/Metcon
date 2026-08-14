@@ -453,7 +453,8 @@
         }
 
         .input-group {
-            flex: 1;
+            flex: 1.2;
+            min-width: 0;
         }
 
         .input-group label {
@@ -470,9 +471,10 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             color: white;
-            padding: 8px;
+            padding: 8px 4px;
             font-size: 0.9rem;
             text-align: center;
+            min-width: 0;
         }
 
         .input-group input:focus {
@@ -483,7 +485,8 @@
         .stepper-input-wrapper {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
+            width: 100%;
         }
 
         .stepper-btn {
@@ -491,11 +494,12 @@
             color: var(--text-primary);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 6px 8px;
+            padding: 6px 4px;
             font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
             user-select: none;
+            flex-shrink: 0;
         }
 
         .stepper-btn:active {
@@ -512,6 +516,7 @@
             font-weight: 700;
             font-size: 0.85rem;
             cursor: pointer;
+            flex-shrink: 0;
         }
 
         .trigger-rest-btn {
@@ -527,6 +532,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
         .trigger-rest-btn.rest-btn-pulsing {
@@ -557,6 +563,24 @@
 
         .completed-set-item strong {
             color: var(--text-primary);
+        }
+
+        .return-to-workout-btn {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .summary-exercise-block {
@@ -950,7 +974,7 @@
                     <span id="activeRunningTimer" class="running-timer-badge">⏱️ 00:00</span>
                 </div>
                 <div class="active-actions">
-                    <button class="summary-toggle-btn" onclick="toggleWorkoutSummary(true)">Summary</button>
+                    <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="toggleWorkoutSummary(true)">Summary</button>
                     <button class="finish-workout-btn" onclick="finishWorkout()">Finish</button>
                     <button class="cancel-workout-btn" onclick="cancelWorkout()">Cancel</button>
                 </div>
@@ -968,6 +992,9 @@
             </div>
 
             <div id="summaryWorkspace" style="display: none;">
+                <button class="return-to-workout-btn" onclick="toggleWorkoutSummary(false)">
+                    ← Return to Active Workout
+                </button>
                 <div id="liveSummaryContent"></div>
             </div>
 
@@ -1015,22 +1042,6 @@
                 </div>
             </div>
             <button class="save-bio-btn" style="background: var(--accent);" onclick="calculateCalories()">Calculate BMR & TDEE</button>
-        </div>
-
-        <div class="biometrics-card" style="border-color: var(--accent);">
-            <div class="section-title" style="margin-bottom: 4px;">FatSecret Platform API Credentials</div>
-            <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:8px;">Enter your FatSecret Developer keys to power dynamic nutrition searches directly from FatSecret's official food database.</p>
-            <div class="biometrics-grid">
-                <div class="bio-input-group">
-                    <label>Client ID / Consumer Key</label>
-                    <input type="text" id="fatsecretClientId" placeholder="e.g. 9a1a6fd1..." style="text-align:left; font-size:0.8rem;">
-                </div>
-                <div class="bio-input-group">
-                    <label>Client Secret / Shared Secret</label>
-                    <input type="password" id="fatsecretClientSecret" placeholder="e.g. sAyYTJiI..." style="text-align:left; font-size:0.8rem;">
-                </div>
-            </div>
-            <button class="save-bio-btn" style="background:#2e2e38; margin-top:8px;" onclick="saveFatSecretCredentials()">Save API Credentials</button>
         </div>
 
         <div id="calorieResults" class="calc-result-box">
@@ -1280,58 +1291,6 @@
         let workoutStartTime = null;
         let runningTimerInterval = null;
 
-        function saveFatSecretCredentials() {
-            const cid = document.getElementById('fatsecretClientId').value.trim();
-            const sec = document.getElementById('fatsecretClientSecret').value.trim();
-            if (cid && sec) {
-                localStorage.setItem('fatsecret_client_id', cid);
-                localStorage.setItem('fatsecret_client_secret', sec);
-                alert("FatSecret API Credentials saved successfully!");
-            } else {
-                alert("Please enter both Client ID and Client Secret.");
-            }
-        }
-
-        function loadFatSecretCredentials() {
-            const cid = localStorage.getItem('fatsecret_client_id');
-            const sec = localStorage.getItem('fatsecret_client_secret');
-            if (cid) document.getElementById('fatsecretClientId').value = cid;
-            if (sec) document.getElementById('fatsecretClientSecret').value = sec;
-        }
-
-        async function getFatSecretAccessToken(clientId, clientSecret) {
-            const cachedToken = sessionStorage.getItem('fatsecret_bearer_token');
-            if (cachedToken) return cachedToken;
-
-            try {
-                const authHeader = btoa(`${clientId}:${clientSecret}`);
-                const tokenUrl = `https://oauth.fatsecret.com/connect/token`;
-                const params = new URLSearchParams();
-                params.append('grant_type', 'client_credentials');
-                params.append('scope', 'basic');
-
-                const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(tokenUrl)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Basic ${authHeader}`
-                    },
-                    body: params
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.access_token) {
-                        sessionStorage.setItem('fatsecret_bearer_token', data.access_token);
-                        return data.access_token;
-                    }
-                }
-            } catch (err) {
-                console.warn("Could not obtain FatSecret Bearer Token:", err);
-            }
-            return null;
-        }
-
         async function fetchExternalCalorieData(inputText) {
             const rawText = inputText.toLowerCase().trim();
 
@@ -1343,38 +1302,23 @@
 
             const searchQuery = rawText.replace(/^(\d+(\.\d+)?)\s*/, '');
 
-            const cid = localStorage.getItem('fatsecret_client_id');
-            const sec = localStorage.getItem('fatsecret_client_secret');
+            try {
+                const apiUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchQuery)}&search_simple=1&action=process&json=1&page_size=1`;
+                const response = await fetch(apiUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.products && data.products.length > 0) {
+                        const product = data.products[0];
+                        const nutriments = product.nutriments;
+                        let kcalPer100g = nutriments ? (nutriments['energy-kcal_100g'] || nutriments['energy-kcal_value'] || nutriments['energy-kcal']) : null;
 
-            if (cid && sec) {
-                const token = await getFatSecretAccessToken(cid, sec);
-                if (token) {
-                    try {
-                        const searchUrl = `https://platform.fatsecret.com/rest/server.api?method=foods.search&search_expression=${encodeURIComponent(searchQuery)}&format=json`;
-                        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data && data.foods && data.foods.food) {
-                                let foodList = Array.isArray(data.foods.food) ? data.foods.food : [data.foods.food];
-                                if (foodList.length > 0) {
-                                    const desc = foodList[0].food_description || "";
-                                    const calMatch = desc.match(/Calories:\s*(\d+)kcal/i) || desc.match(/(\d+)\s*kcal/i);
-                                    if (calMatch) {
-                                        return Math.round(parseInt(calMatch[1]) * quantity);
-                                    }
-                                }
-                            }
+                        if (kcalPer100g && !isNaN(kcalPer100g)) {
+                            return Math.round(kcalPer100g * quantity);
                         }
-                    } catch (err) {
-                        console.warn("FatSecret API search error, using fallback estimator:", err);
                     }
                 }
+            } catch (err) {
+                console.warn("External calorie API offline, using fallback estimator:", err);
             }
 
             for (let item of calorieDatabase) {
@@ -1467,7 +1411,6 @@
                 document.getElementById('viewCalories').classList.add('active');
                 document.getElementById('navCalories').classList.add('active');
                 loadCalorieBiometrics();
-                loadFatSecretCredentials();
                 renderFoodLog();
             } else {
                 document.getElementById('viewHistory').classList.add('active');
@@ -1894,10 +1837,13 @@
             });
         }
 
+        // Clean Workout Initialization Fix
         function startWorkout(routineName) {
             currentActiveRoutine = routineName;
             activeWorkoutState = {};
             workoutStartTime = Date.now();
+
+            sessionStorage.removeItem('active_session_safeguard');
 
             clearInterval(runningTimerInterval);
             updateRunningTimerDisplay();
@@ -1907,6 +1853,7 @@
             document.getElementById('activeWorkspace').style.display = 'block';
             document.getElementById('activeRoutineName').textContent = routineName + " Workout";
             document.getElementById('summaryWorkspace').style.display = 'none';
+            document.getElementById('activeExercisesContainer').style.display = 'block';
 
             renderActiveExercises();
             saveSessionSafeguard();
@@ -2183,14 +2130,17 @@
         function toggleWorkoutSummary(show) {
             const summaryDiv = document.getElementById('summaryWorkspace');
             const exercisesContainer = document.getElementById('activeExercisesContainer');
+            const toggleBtn = document.getElementById('summaryToggleBtn');
 
             if (show) {
                 exercisesContainer.style.display = 'none';
                 summaryDiv.style.display = 'block';
+                if (toggleBtn) toggleBtn.textContent = 'Workout';
                 renderLiveSummaryContent();
             } else {
                 summaryDiv.style.display = 'none';
                 exercisesContainer.style.display = 'block';
+                if (toggleBtn) toggleBtn.textContent = 'Summary';
             }
         }
 
@@ -2265,6 +2215,7 @@
             switchView('history');
         }
 
+        // Clean Reset Function on Cancel/Finish
         function resetWorkspace() {
             currentActiveRoutine = null;
             activeWorkoutState = {};
@@ -2273,6 +2224,10 @@
             resetTimer();
 
             sessionStorage.removeItem('active_session_safeguard');
+
+            // Empty the inner containers completely
+            document.getElementById('activeExercisesContainer').innerHTML = '';
+            document.getElementById('liveSummaryContent').innerHTML = '';
 
             document.getElementById('summaryWorkspace').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'none';

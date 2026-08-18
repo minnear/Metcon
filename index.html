@@ -297,12 +297,35 @@
             font-size: 1.1rem;
         }
 
+        .running-timer-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
         .running-timer-badge {
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--accent);
-            margin-top: 2px;
-            display: block;
+            display: inline-block;
+        }
+
+        .workout-timer-btn {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .workout-timer-btn.active-start {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
         }
 
         .active-actions {
@@ -843,6 +866,30 @@
             color: var(--text-secondary);
         }
 
+        .history-actions-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .view-summary-history-btn {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .view-summary-history-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
         .delete-history-btn {
             background: transparent;
             color: var(--danger);
@@ -863,6 +910,8 @@
 
         .history-exercise-row span {
             color: var(--text-secondary);
+            text-align: right;
+            margin-left: 8px;
         }
 
         .empty-history {
@@ -892,6 +941,66 @@
         canvas {
             width: 100% !important;
             height: 160px !important;
+        }
+
+        /* Modal Styles for Historical Workout Summary */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--danger);
         }
     </style>
 </head>
@@ -971,7 +1080,10 @@
                 <div class="active-title">
                     <span style="font-size:0.75rem; color:var(--text-secondary); text-transform:uppercase; display:block;">Active Session</span>
                     <h2 id="activeRoutineName">Upper Body Push Workout</h2>
-                    <span id="activeRunningTimer" class="running-timer-badge">⏱️ 00:00</span>
+                    <div class="running-timer-container">
+                        <span id="activeRunningTimer" class="running-timer-badge">⏱️ 00:00</span>
+                        <button id="workoutTimerToggleBtn" class="workout-timer-btn active-start" onclick="toggleWorkoutTimer()">Start</button>
+                    </div>
                 </div>
                 <div class="active-actions">
                     <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="toggleWorkoutSummary(true)">Summary</button>
@@ -1137,6 +1249,20 @@
         <div id="historyContainer"></div>
     </div>
 
+    <!-- MODAL POPUP FOR HISTORICAL WORKOUT SUMMARY -->
+    <div id="historySummaryModal" class="modal-overlay" onclick="closeHistorySummaryModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modalSummaryTitle">Workout Summary</h3>
+                    <span id="modalSummaryMeta" style="font-size:0.75rem; color:var(--text-secondary);"></span>
+                </div>
+                <button class="modal-close-btn" onclick="closeHistorySummaryModal()">✕</button>
+            </div>
+            <div id="modalSummaryContent"></div>
+        </div>
+    </div>
+
     <script>
         async function fetchZenQuote() {
             const quoteTextEl = document.getElementById('quoteText');
@@ -1291,6 +1417,8 @@
         let currentActiveRoutine = null;
         let activeWorkoutState = {};
         let workoutStartTime = null;
+        let elapsedWorkoutSeconds = 0;
+        let isWorkoutTimerRunning = false;
         let runningTimerInterval = null;
 
         async function fetchExternalCalorieData(inputText) {
@@ -1339,7 +1467,8 @@
                 const sessionData = {
                     routine: currentActiveRoutine,
                     state: activeWorkoutState,
-                    startTime: workoutStartTime
+                    elapsedSeconds: elapsedWorkoutSeconds,
+                    isTimerRunning: isWorkoutTimerRunning
                 };
                 sessionStorage.setItem('active_session_safeguard', JSON.stringify(sessionData));
             } else {
@@ -1355,15 +1484,19 @@
                     if (data.routine && data.state) {
                         currentActiveRoutine = data.routine;
                         activeWorkoutState = data.state;
-                        workoutStartTime = data.startTime;
+                        elapsedWorkoutSeconds = data.elapsedSeconds || 0;
+                        isWorkoutTimerRunning = false;
 
                         document.getElementById('workoutSelector').style.display = 'none';
                         document.getElementById('activeWorkspace').style.display = 'block';
                         document.getElementById('activeRoutineName').textContent = currentActiveRoutine + " Workout";
 
-                        clearInterval(runningTimerInterval);
                         updateRunningTimerDisplay();
-                        runningTimerInterval = setInterval(updateRunningTimerDisplay, 1000);
+                        if (data.isTimerRunning) {
+                            toggleWorkoutTimer();
+                        } else {
+                            updateWorkoutTimerButton();
+                        }
 
                         renderActiveExercises();
                     }
@@ -1502,20 +1635,11 @@
                 heavy: 1.725
             };
 
-            const activityLabels = {
-                sedentary: "Sedentary (Little/no exercise)",
-                light: "Light Active (1-3 days/wk)",
-                moderate: "Moderate Active (3-5 days/wk)",
-                heavy: "Very Active (6-7 days/wk)"
-            };
-
             const selectedMult = activityMultipliers[activity] || 1.375;
             const tdeeVal = Math.round(bmrRounded * selectedMult);
 
             document.getElementById('tdeeDisplayMain').textContent = `${tdeeVal.toLocaleString()} kcal`;
             document.getElementById('bmrDisplaySub').textContent = `${bmrRounded.toLocaleString()} kcal`;
-            document.getElementById('selectedActivityLabel').textContent = activityLabels[activity];
-            document.getElementById('selectedTdeeVal').textContent = `${tdeeVal.toLocaleString()} kcal`;
 
             document.getElementById('calorieResults').style.display = 'block';
             renderFoodLog();
@@ -1839,17 +1963,19 @@
             });
         }
 
-        // Clean Workout Initialization Fix
+        // Clean Workout Initialization Fix & Timer Manual Control
         function startWorkout(routineName) {
             currentActiveRoutine = routineName;
             activeWorkoutState = {};
-            workoutStartTime = Date.now();
+            elapsedWorkoutSeconds = 0;
+            isWorkoutTimerRunning = false;
 
             sessionStorage.removeItem('active_session_safeguard');
 
             clearInterval(runningTimerInterval);
+            runningTimerInterval = null;
             updateRunningTimerDisplay();
-            runningTimerInterval = setInterval(updateRunningTimerDisplay, 1000);
+            updateWorkoutTimerButton();
 
             document.getElementById('workoutSelector').style.display = 'none';
             document.getElementById('activeWorkspace').style.display = 'block';
@@ -1862,14 +1988,50 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function toggleWorkoutTimer() {
+            if (isWorkoutTimerRunning) {
+                // Pause timer
+                clearInterval(runningTimerInterval);
+                runningTimerInterval = null;
+                isWorkoutTimerRunning = false;
+            } else {
+                // Start / Resume timer
+                isWorkoutTimerRunning = true;
+                runningTimerInterval = setInterval(() => {
+                    elapsedWorkoutSeconds++;
+                    updateRunningTimerDisplay();
+                    saveSessionSafeguard();
+                }, 1000);
+            }
+            updateWorkoutTimerButton();
+            saveSessionSafeguard();
+        }
+
+        function updateWorkoutTimerButton() {
+            const btn = document.getElementById('workoutTimerToggleBtn');
+            if (!btn) return;
+            if (isWorkoutTimerRunning) {
+                btn.textContent = 'Pause';
+                btn.className = 'workout-timer-btn';
+            } else {
+                btn.textContent = elapsedWorkoutSeconds > 0 ? 'Resume' : 'Start';
+                btn.className = 'workout-timer-btn active-start';
+            }
+        }
+
         function updateRunningTimerDisplay() {
-            if (!workoutStartTime) return;
-            const elapsedSecs = Math.floor((Date.now() - workoutStartTime) / 1000);
-            const mins = Math.floor(elapsedSecs / 60);
-            const secs = elapsedSecs % 60;
+            const mins = Math.floor(elapsedWorkoutSeconds / 60);
+            const secs = elapsedWorkoutSeconds % 60;
             const formatted = `⏱️ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
             const badge = document.getElementById('activeRunningTimer');
             if (badge) badge.textContent = formatted;
+        }
+
+        function stopWorkoutTimer() {
+            clearInterval(runningTimerInterval);
+            runningTimerInterval = null;
+            isWorkoutTimerRunning = false;
+            updateWorkoutTimerButton();
         }
 
         function toggleWarmupCheck(warmupIdx) {
@@ -2173,29 +2335,43 @@
 
         function cancelWorkout() {
             if (confirm("Are you sure you want to cancel this active workout? Logged data will be lost.")) {
+                stopWorkoutTimer();
                 resetWorkspace();
             }
         }
 
         function finishWorkout() {
-            const durationMs = Date.now() - (workoutStartTime || Date.now());
-            const durationMins = Math.max(1, Math.round(durationMs / 60000));
+            stopWorkoutTimer();
+
+            const durationMins = Math.max(1, Math.round(elapsedWorkoutSeconds / 60));
             const weightLbs = getLatestWeightLbs();
             const weightKg = weightLbs * 0.45359237;
 
             const estimatedBurn = Math.round(6.0 * 3.5 * weightKg / 200 * durationMins);
 
             const exerciseRows = [];
+            const summaryStructure = [];
+
             for (const [name, state] of Object.entries(activeWorkoutState)) {
                 if (name === 'warmups') continue;
+
                 if (state.isMetcon) {
-                    exerciseRows.push({ name, details: `Result: ${state.result ? state.result : (state.completed ? 'Completed ✓' : 'Logged')}` });
+                    const resultText = state.result ? state.result : (state.completed ? 'Completed ✓' : 'Logged');
+                    exerciseRows.push({ name, details: `Result: ${resultText}` });
+                    summaryStructure.push({ name, isMetcon: true, result: resultText });
                 } else {
+                    // Removed 'S1:' set numbers from history formatting and join with ' | '
                     const setSummaries = state.completedSets.map(s => {
                         const unitStr = isNaN(parseFloat(s.weight)) ? '' : ` ${s.unit || 'lbs'}`;
-                        return `S${s.setNum}: ${s.weight}${unitStr} x ${s.reps}`;
+                        return `${s.weight}${unitStr} x ${s.reps}`;
                     }).join(' | ');
+
                     exerciseRows.push({ name, details: setSummaries ? setSummaries : 'Skipped / No sets' });
+                    summaryStructure.push({
+                        name,
+                        isMetcon: false,
+                        sets: state.completedSets.map(s => ({ setNum: s.setNum, weight: s.weight, reps: s.reps, unit: s.unit }))
+                    });
                 }
             }
 
@@ -2205,7 +2381,8 @@
                 duration: `${durationMins} min${durationMins > 1 ? 's' : ''}`,
                 estimatedCalories: estimatedBurn,
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                exercises: exerciseRows
+                exercises: exerciseRows,
+                summaryStructure: summaryStructure
             };
 
             let history = JSON.parse(localStorage.getItem('workout_history') || '[]');
@@ -2220,8 +2397,8 @@
         function resetWorkspace() {
             currentActiveRoutine = null;
             activeWorkoutState = {};
-            workoutStartTime = null;
-            clearInterval(runningTimerInterval);
+            elapsedWorkoutSeconds = 0;
+            stopWorkoutTimer();
             resetTimer();
 
             sessionStorage.removeItem('active_session_safeguard');
@@ -2240,6 +2417,48 @@
                 history = history.filter(item => item.id !== id);
                 localStorage.setItem('workout_history', JSON.stringify(history));
                 renderHistoryAndTrends();
+            }
+        }
+
+        function openHistorySummaryModal(id) {
+            const history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+            const record = history.find(item => item.id === id);
+            if (!record) return;
+
+            document.getElementById('modalSummaryTitle').textContent = `${record.routine} Workout`;
+            document.getElementById('modalSummaryMeta').textContent = `${record.date} • ⏱️ ${record.duration} • 🔥 ~${record.estimatedCalories || 0} kcal`;
+
+            const container = document.getElementById('modalSummaryContent');
+            let html = '';
+
+            if (record.summaryStructure && record.summaryStructure.length > 0) {
+                record.summaryStructure.forEach(item => {
+                    html += `<div class="summary-exercise-block"><h4>${item.name}</h4>`;
+                    if (item.isMetcon) {
+                        html += `<div>Result: ${item.result}</div>`;
+                    } else if (!item.sets || item.sets.length === 0) {
+                        html += `<div style="color:var(--text-secondary); font-size:0.8rem;">No sets logged.</div>`;
+                    } else {
+                        item.sets.forEach(s => {
+                            const unitStr = isNaN(parseFloat(s.weight)) ? '' : ` ${s.unit || 'lbs'}`;
+                            html += `<div style="font-size:0.82rem; color:var(--text-secondary);">Set ${s.setNum}: <strong>${s.weight}${unitStr}</strong> — <strong>${s.reps}</strong></div>`;
+                        });
+                    }
+                    html += `</div>`;
+                });
+            } else {
+                record.exercises.forEach(ex => {
+                    html += `<div class="summary-exercise-block"><h4>${ex.name}</h4><div style="font-size:0.85rem; color:var(--text-primary);">${ex.details}</div></div>`;
+                });
+            }
+
+            container.innerHTML = html;
+            document.getElementById('historySummaryModal').classList.add('active');
+        }
+
+        function closeHistorySummaryModal(event) {
+            if (!event || event.target === document.getElementById('historySummaryModal') || event.target.classList.contains('modal-close-btn')) {
+                document.getElementById('historySummaryModal').classList.remove('active');
             }
         }
 
@@ -2286,7 +2505,10 @@
                                     <span class="meta-pill meta-burn">🔥 ~${burnCals} kcal</span>
                                 </div>
                             </div>
-                            <button class="delete-history-btn" onclick="deleteWorkoutRecord(${item.id})" title="Delete Workout">🗑️</button>
+                            <div class="history-actions-group">
+                                <button class="view-summary-history-btn" onclick="openHistorySummaryModal(${item.id})">Summary</button>
+                                <button class="delete-history-btn" onclick="deleteWorkoutRecord(${item.id})" title="Delete Workout">🗑️</button>
+                            </div>
                         </div>
                 `;
                 item.exercises.forEach(ex => {

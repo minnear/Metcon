@@ -914,6 +914,26 @@
             margin-left: 8px;
         }
 
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .history-table th, .history-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+        }
+
         .empty-history {
             text-align: center;
             color: var(--text-secondary);
@@ -1237,6 +1257,23 @@
     <!-- HISTORY VIEW -->
     <div id="viewHistory" class="view-section">
         <div class="chart-container">
+            <h3>Progress & Performance Trends</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Volume</th>
+                        <th>Density</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <!-- Dynamic rendering of history items -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
             <h3>Body Weight Trend</h3>
             <canvas id="weightChart"></canvas>
         </div>
@@ -1264,6 +1301,9 @@
     </div>
 
     <script>
+        // Store for integrated progress session history
+        let workoutHistory = JSON.parse(localStorage.getItem('workoutHistory')) || [];
+
         async function fetchZenQuote() {
             const quoteTextEl = document.getElementById('quoteText');
             const quoteAuthorEl = document.getElementById('quoteAuthor');
@@ -1420,6 +1460,88 @@
         let elapsedWorkoutSeconds = 0;
         let isWorkoutTimerRunning = false;
         let runningTimerInterval = null;
+
+        /**
+         * Calculates volume, duration, work rate, and trend badges upon saving a session.
+         * @param {Array} dynamicSets - Array of set objects: [{ reps: 10, weight: 135 }, ...]
+         * @param {number} durationMinutes - Total duration of session in minutes.
+         * @returns {Object} Complete analyzed session object
+         */
+        function saveWorkoutSession(dynamicSets, durationMinutes) {
+          // 1. Sum Total Volume
+          const totalVolume = dynamicSets.reduce((sum, set) => {
+            return sum + (Number(set.reps) * Number(set.weight));
+          }, 0);
+
+          // 2. Compute Density Index / Work Rate (lbs/min)
+          const densityIndex = durationMinutes > 0 
+            ? parseFloat((totalVolume / durationMinutes).toFixed(2)) 
+            : 0;
+
+          // 3. Evaluate Performance Against 4-Session Rolling Average
+          const { trendBadge, rollingAvg } = calculateTrend(totalVolume);
+
+          const sessionData = {
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            totalVolume,
+            durationMinutes,
+            densityIndex,
+            trendBadge,
+            rollingAvg
+          };
+
+          // Save to history array & persistent storage
+          workoutHistory.unshift(sessionData); // Newest first
+          localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+
+          renderHistoryTable();
+          return sessionData;
+        }
+
+        /**
+         * Computes directional progress badge based on 4-session rolling average window.
+         * @param {number} currentVolume 
+         * @returns {Object} Badge string and calculated average
+         */
+        function calculateTrend(currentVolume) {
+          // Take up to the last 4 completed sessions prior to this one
+          const recentSessions = workoutHistory.slice(0, 4);
+
+          if (recentSessions.length === 0) {
+            return { trendBadge: '⚪ ➡️', rollingAvg: currentVolume };
+          }
+
+          const sumVolume = recentSessions.reduce((acc, s) => acc + s.totalVolume, 0);
+          const rollingAvg = sumVolume / recentSessions.length;
+
+          // Evaluation logic: > +2.5% increase (🟢), < -2.5% decrease (🔵), within range (⚪)
+          let trendBadge = '⚪ ➡️';
+          if (currentVolume > rollingAvg * 1.025) {
+            trendBadge = '🟢 ↗️';
+          } else if (currentVolume < rollingAvg * 0.975) {
+            trendBadge = '🔵 ↘️';
+          }
+
+          return { trendBadge, rollingAvg: parseFloat(rollingAvg.toFixed(2)) };
+        }
+
+        /**
+         * Renders the session history table with badges and density metrics.
+         */
+        function renderHistoryTable() {
+          const tableBody = document.getElementById('history-table-body');
+          if (!tableBody) return;
+
+          tableBody.innerHTML = workoutHistory.map(session => `
+            <tr>
+              <td>${new Date(session.timestamp).toLocaleDateString()}</td>
+              <td><strong>${session.totalVolume.toLocaleString()}</strong> lbs</td>
+              <td>${session.densityIndex} lbs/min</td>
+              <td><span title="4-Session Avg: ${session.rollingAvg} lbs">${session.trendBadge}</span></td>
+            </tr>
+          `).join('');
+        }
 
         async function fetchExternalCalorieData(inputText) {
             const rawText = inputText.toLowerCase().trim();
@@ -1963,7 +2085,6 @@
             });
         }
 
-        // Clean Workout Initialization Fix & Timer Manual Control
         function startWorkout(routineName) {
             currentActiveRoutine = routineName;
             activeWorkoutState = {};
@@ -2351,6 +2472,7 @@
 
             const exerciseRows = [];
             const summaryStructure = [];
+            const dynamicSets = [];
 
             for (const [name, state] of Object.entries(activeWorkoutState)) {
                 if (name === 'warmups') continue;
@@ -2360,9 +2482,9 @@
                     exerciseRows.push({ name, details: `Result: ${resultText}` });
                     summaryStructure.push({ name, isMetcon: true, result: resultText });
                 } else {
-                    // Removed 'S1:' set numbers from history formatting and join with ' | '
                     const setSummaries = state.completedSets.map(s => {
                         const unitStr = isNaN(parseFloat(s.weight)) ? '' : ` ${s.unit || 'lbs'}`;
+                        dynamicSets.push({ reps: s.reps, weight: s.weight });
                         return `${s.weight}${unitStr} x ${s.reps}`;
                     }).join(' | ');
 
@@ -2374,6 +2496,9 @@
                     });
                 }
             }
+
+            // Perform calculations and log to the progress & trend tracker
+            saveWorkoutSession(dynamicSets, durationMins);
 
             const workoutRecord = {
                 id: Date.now(),
@@ -2463,6 +2588,8 @@
         }
 
         function renderHistoryAndTrends() {
+            renderHistoryTable();
+
             const container = document.getElementById('historyContainer');
             let history = JSON.parse(localStorage.getItem('workout_history') || '[]');
             const biometrics = JSON.parse(localStorage.getItem('biometrics_history') || '[]');
@@ -2631,6 +2758,28 @@
             }, 1500);
         }
 
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(countdown);
+                isRunning = false;
+                document.getElementById('timerBtn').textContent = "Start";
+            } else {
+                isRunning = true;
+                document.getElementById('timerBtn').textContent = "Pause";
+                countdown = setInterval(() => {
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        isRunning = false;
+                        document.getElementById('timerBtn').textContent = "Start";
+                        triggerTimerAlert();
+                    } else {
+                        timeLeft--;
+                        document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+                    }
+                }, 1000);
+            }
+        }
+
         function startRestForExercise(seconds, exerciseName) {
             const targetSeconds = seconds || 90;
             selectedInterval = targetSeconds;
@@ -2646,71 +2795,30 @@
             }
 
             timeLeft = targetSeconds;
+            document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+            
             isRunning = true;
+            document.getElementById('timerBtn').textContent = "Pause";
             
-            const btn = document.getElementById('timerBtn');
-            const display = document.getElementById('timerDisplay');
-            
-            btn.textContent = "Pause";
-            display.textContent = formatTime(timeLeft);
-
             countdown = setInterval(() => {
-                timeLeft--;
-                display.textContent = formatTime(timeLeft);
-
                 if (timeLeft <= 0) {
                     clearInterval(countdown);
                     isRunning = false;
-                    btn.textContent = "Start";
-                    timeLeft = selectedInterval;
-                    display.textContent = formatTime(timeLeft);
+                    document.getElementById('timerBtn').textContent = "Start";
                     triggerTimerAlert();
+                } else {
+                    timeLeft--;
+                    document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
                 }
             }, 1000);
         }
 
-        function toggleTimer() {
-            const btn = document.getElementById('timerBtn');
-            const display = document.getElementById('timerDisplay');
-
-            if (isRunning) {
-                clearInterval(countdown);
-                isRunning = false;
-                btn.textContent = "Resume";
-                if (activeRestBtnId) {
-                    const activeBtn = document.getElementById(activeRestBtnId);
-                    if (activeBtn) activeBtn.classList.remove('rest-btn-pulsing');
-                }
-            } else {
-                if (timeLeft <= 0) timeLeft = selectedInterval;
-                isRunning = true;
-                btn.textContent = "Pause";
-                document.getElementById('inlineRestTimer').classList.remove('flash-active');
-
-                if (activeRestBtnId) {
-                    const activeBtn = document.getElementById(activeRestBtnId);
-                    if (activeBtn) activeBtn.classList.add('rest-btn-pulsing');
-                }
-
-                countdown = setInterval(() => {
-                    timeLeft--;
-                    display.textContent = formatTime(timeLeft);
-
-                    if (timeLeft <= 0) {
-                        clearInterval(countdown);
-                        isRunning = false;
-                        btn.textContent = "Start";
-                        timeLeft = selectedInterval;
-                        display.textContent = formatTime(timeLeft);
-                        triggerTimerAlert();
-                    }
-                }, 1000);
-            }
-        }
-
-        fetchZenQuote();
-        populateBiometricsFromHistory();
-        checkSessionSafeguardRestore();
+        window.onload = () => {
+            fetchZenQuote();
+            checkSessionSafeguardRestore();
+            populateBiometricsFromHistory();
+            renderHistoryTable();
+        };
     </script>
 </body>
 </html>

@@ -302,6 +302,8 @@
             align-items: center;
             gap: 6px;
             margin-top: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .running-timer-badge {
@@ -309,6 +311,7 @@
             font-weight: 700;
             color: var(--accent);
             display: inline-block;
+            white-space: nowrap;
         }
 
         .workout-timer-btn {
@@ -320,6 +323,7 @@
             font-size: 0.7rem;
             font-weight: 700;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         .workout-timer-btn.active-start {
@@ -1417,6 +1421,7 @@
         let currentActiveRoutine = null;
         let activeWorkoutState = {};
         let workoutStartTime = null;
+        let accumulatedWorkoutSeconds = 0;
         let elapsedWorkoutSeconds = 0;
         let isWorkoutTimerRunning = false;
         let runningTimerInterval = null;
@@ -1468,6 +1473,8 @@
                     routine: currentActiveRoutine,
                     state: activeWorkoutState,
                     elapsedSeconds: elapsedWorkoutSeconds,
+                    accumulatedSeconds: accumulatedWorkoutSeconds,
+                    startTime: workoutStartTime,
                     isTimerRunning: isWorkoutTimerRunning
                 };
                 sessionStorage.setItem('active_session_safeguard', JSON.stringify(sessionData));
@@ -1484,17 +1491,21 @@
                     if (data.routine && data.state) {
                         currentActiveRoutine = data.routine;
                         activeWorkoutState = data.state;
-                        elapsedWorkoutSeconds = data.elapsedSeconds || 0;
+                        accumulatedWorkoutSeconds = data.accumulatedSeconds || data.elapsedSeconds || 0;
+                        workoutStartTime = data.startTime || null;
                         isWorkoutTimerRunning = false;
 
                         document.getElementById('workoutSelector').style.display = 'none';
                         document.getElementById('activeWorkspace').style.display = 'block';
                         document.getElementById('activeRoutineName').textContent = currentActiveRoutine + " Workout";
 
-                        updateRunningTimerDisplay();
-                        if (data.isTimerRunning) {
+                        if (data.isTimerRunning && workoutStartTime) {
+                            const now = Date.now();
+                            elapsedWorkoutSeconds = Math.floor((now - workoutStartTime) / 1000) + accumulatedWorkoutSeconds;
                             toggleWorkoutTimer();
                         } else {
+                            elapsedWorkoutSeconds = accumulatedWorkoutSeconds;
+                            updateRunningTimerDisplay();
                             updateWorkoutTimerButton();
                         }
 
@@ -1967,7 +1978,9 @@
         function startWorkout(routineName) {
             currentActiveRoutine = routineName;
             activeWorkoutState = {};
+            accumulatedWorkoutSeconds = 0;
             elapsedWorkoutSeconds = 0;
+            workoutStartTime = null;
             isWorkoutTimerRunning = false;
 
             sessionStorage.removeItem('active_session_safeguard');
@@ -1994,11 +2007,15 @@
                 clearInterval(runningTimerInterval);
                 runningTimerInterval = null;
                 isWorkoutTimerRunning = false;
+                accumulatedWorkoutSeconds = elapsedWorkoutSeconds;
+                workoutStartTime = null;
             } else {
                 // Start / Resume timer
                 isWorkoutTimerRunning = true;
+                workoutStartTime = Date.now();
                 runningTimerInterval = setInterval(() => {
-                    elapsedWorkoutSeconds++;
+                    const now = Date.now();
+                    elapsedWorkoutSeconds = Math.floor((now - workoutStartTime) / 1000) + accumulatedWorkoutSeconds;
                     updateRunningTimerDisplay();
                     saveSessionSafeguard();
                 }, 1000);
@@ -2031,6 +2048,7 @@
             clearInterval(runningTimerInterval);
             runningTimerInterval = null;
             isWorkoutTimerRunning = false;
+            workoutStartTime = null;
             updateWorkoutTimerButton();
         }
 
@@ -2397,7 +2415,9 @@
         function resetWorkspace() {
             currentActiveRoutine = null;
             activeWorkoutState = {};
+            accumulatedWorkoutSeconds = 0;
             elapsedWorkoutSeconds = 0;
+            workoutStartTime = null;
             stopWorkoutTimer();
             resetTimer();
 
@@ -2707,6 +2727,15 @@
                 }, 1000);
             }
         }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && isWorkoutTimerRunning && workoutStartTime) {
+                const now = Date.now();
+                elapsedWorkoutSeconds = Math.floor((now - workoutStartTime) / 1000) + accumulatedWorkoutSeconds;
+                updateRunningTimerDisplay();
+                saveSessionSafeguard();
+            }
+        });
 
         fetchZenQuote();
         populateBiometricsFromHistory();

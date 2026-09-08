@@ -1035,6 +1035,108 @@
         .modal-close-btn:hover {
             color: var(--danger);
         }
+
+        /* Calendar View Styles */
+        .calendar-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-nav-btn {
+            background: #2e2e38;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .calendar-month-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+        }
+
+        .calendar-day-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            padding-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .calendar-cell {
+            aspect-ratio: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .calendar-cell.empty {
+            background: transparent;
+            border: none;
+        }
+
+        .calendar-cell.has-workout {
+            background-color: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            color: var(--success);
+            font-weight: 800;
+        }
+
+        .calendar-cell.has-workout::after {
+            content: '•';
+            color: var(--success);
+            font-size: 1.2rem;
+            position: absolute;
+            bottom: 2px;
+        }
+
+        .calendar-cell.is-today {
+            border: 2px solid var(--accent);
+        }
+
+        .tally-card {
+            background: linear-gradient(135deg, #1e1e24, #2a2a38);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .tally-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--success);
+            line-height: 1.1;
+        }
+
+        .tally-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -1047,6 +1149,7 @@
     <div class="app-nav">
         <button class="nav-btn active" id="navWorkouts" onclick="switchView('workouts')">Workouts</button>
         <button class="nav-btn" id="navCalories" onclick="switchView('calories')">Calories</button>
+        <button class="nav-btn" id="navCalendar" onclick="switchView('calendar')">Calendar</button>
         <button class="nav-btn" id="navHistory" onclick="switchView('history')">History & Trends</button>
     </div>
 
@@ -1267,6 +1370,36 @@
         </div>
     </div>
 
+    <!-- CALENDAR VIEW -->
+    <div id="viewCalendar" class="view-section">
+        <div class="tally-card">
+            <div id="yearTallyNumber" class="tally-number">0</div>
+            <div class="tally-label">Workouts Logged in <span id="currentYearLabel">2026</span></div>
+        </div>
+
+        <div class="chart-container">
+            <div class="calendar-nav-bar">
+                <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)">◀ Prev</button>
+                <span id="calendarMonthLabel" class="calendar-month-title">Month Year</span>
+                <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)">Next ▶</button>
+            </div>
+
+            <div class="calendar-grid">
+                <div class="calendar-day-label">Sun</div>
+                <div class="calendar-day-label">Mon</div>
+                <div class="calendar-day-label">Tue</div>
+                <div class="calendar-day-label">Wed</div>
+                <div class="calendar-day-label">Thu</div>
+                <div class="calendar-day-label">Fri</div>
+                <div class="calendar-day-label">Sat</div>
+            </div>
+
+            <div id="calendarGridCells" class="calendar-grid" style="margin-top: 6px;">
+                <!-- Calendar cells rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
     <!-- HISTORY VIEW -->
     <div id="viewHistory" class="view-section">
         <div class="chart-container">
@@ -1324,6 +1457,8 @@
     <script>
         // Store for integrated progress session history
         let workoutHistory = JSON.parse(localStorage.getItem('workoutHistory')) || [];
+
+        let calendarDisplayDate = new Date();
 
         async function fetchZenQuote() {
             const quoteTextEl = document.getElementById('quoteText');
@@ -1710,6 +1845,10 @@
                 document.getElementById('navCalories').classList.add('active');
                 loadCalorieBiometrics();
                 renderFoodLog();
+            } else if (viewName === 'calendar') {
+                document.getElementById('viewCalendar').classList.add('active');
+                document.getElementById('navCalendar').classList.add('active');
+                renderCalendarView();
             } else {
                 document.getElementById('viewHistory').classList.add('active');
                 document.getElementById('navHistory').classList.add('active');
@@ -1717,6 +1856,81 @@
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderCalendarView() {
+            const year = calendarDisplayDate.getFullYear();
+            const month = calendarDisplayDate.getMonth();
+
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+
+            document.getElementById('calendarMonthLabel').textContent = `${monthNames[month]} ${year}`;
+            document.getElementById('currentYearLabel').textContent = year;
+
+            const history = JSON.parse(localStorage.getItem('workout_history') || '[]');
+
+            // Compute running yearly tally for current year
+            const yearlyCount = history.filter(item => {
+                if (!item.date) return false;
+                const dateObj = new Date(item.date);
+                return dateObj.getFullYear() === year;
+            }).length;
+
+            document.getElementById('yearTallyNumber').textContent = yearlyCount;
+
+            // Map workout dates
+            const workoutDatesSet = new Set();
+            history.forEach(item => {
+                if (item.date) {
+                    const d = new Date(item.date);
+                    if (!isNaN(d.getTime())) {
+                        const dateKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                        workoutDatesSet.add(dateKey);
+                    }
+                }
+            });
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+            const gridContainer = document.getElementById('calendarGridCells');
+            gridContainer.innerHTML = '';
+
+            // Render padding cells for start of month
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-cell empty';
+                gridContainer.appendChild(emptyCell);
+            }
+
+            // Render day cells
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell';
+                cell.textContent = day;
+
+                const checkKey = `${year}-${month}-${day}`;
+                if (workoutDatesSet.has(checkKey)) {
+                    cell.classList.add('has-workout');
+                }
+
+                if (isCurrentMonth && day === today.getDate()) {
+                    cell.classList.add('is-today');
+                }
+
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        function changeCalendarMonth(offset) {
+            calendarDisplayDate.setMonth(calendarDisplayDate.getMonth() + offset);
+            renderCalendarView();
         }
 
         function getLatestWeightLbs() {
@@ -2584,7 +2798,7 @@
 
             alert(`Workout completed in ${workoutRecord.duration}! Estimated ~${estimatedBurn} kcal burned.`);
             resetWorkspace();
-            switchView('history');
+            switchView('calendar');
         }
 
         function resetWorkspace() {
@@ -2727,6 +2941,7 @@
 
         function drawLineChart(canvasId, dataArray, propertyKey, lineColor) {
             const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
             canvas.width = canvas.parentElement.clientWidth - 32;
@@ -2740,29 +2955,34 @@
                 ctx.fillStyle = '#9ca3af';
                 ctx.font = '12px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('No historical data logged yet', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('No data points logged yet', canvas.width / 2, canvas.height / 2);
                 return;
             }
 
             const values = validData.map(d => d[propertyKey]);
-            const labels = validData.map(d => d.dateStr);
+            let maxVal = Math.max(...values);
+            let minVal = Math.min(...values);
 
-            const minVal = Math.min(...values);
-            const maxVal = Math.max(...values);
+            if (maxVal === minVal) {
+                maxVal += 1;
+                minVal -= 1;
+            }
+
             const padding = 30;
             const graphWidth = canvas.width - padding * 2;
             const graphHeight = canvas.height - padding * 2;
-            const range = maxVal - minVal === 0 ? 1 : maxVal - minVal;
+            const range = maxVal - minVal;
 
-            const points = values.map((val, idx) => {
-                const x = padding + (idx / (values.length - 1 || 1)) * graphWidth;
-                const y = canvas.height - padding - ((val - minVal) / range) * graphHeight;
-                return { x, y, val, label: labels[idx] };
-            });
-
-            ctx.beginPath();
             ctx.strokeStyle = lineColor;
             ctx.lineWidth = 2.5;
+            ctx.beginPath();
+
+            const points = validData.map((pt, idx) => {
+                const x = padding + (idx / (validData.length - 1 || 1)) * graphWidth;
+                const y = canvas.height - padding - ((pt[propertyKey] - minVal) / range) * graphHeight;
+                return { x, y, val: pt[propertyKey], label: pt.dateStr };
+            });
+
             points.forEach((pt, idx) => {
                 if (idx === 0) ctx.moveTo(pt.x, pt.y);
                 else ctx.lineTo(pt.x, pt.y);
@@ -2781,124 +3001,92 @@
                 ctx.fillStyle = '#f4f4f6';
                 ctx.font = '10px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(pt.val, pt.x, pt.y - 8);
+                ctx.fillText(`${pt.val}`, pt.x, pt.y - 8);
 
                 ctx.fillStyle = '#9ca3af';
                 ctx.fillText(pt.label, pt.x, canvas.height - 8);
             });
         }
 
-        let countdown;
-        let selectedInterval = 90;
-        let timeLeft = 90;
-        let isRunning = false;
-        let activeRestBtnId = null;
-
-        function formatTime(seconds) {
-            let mins = Math.floor(seconds / 60);
-            let secs = seconds % 60;
-            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        function clearRestBtnPulse() {
-            document.querySelectorAll('.trigger-rest-btn').forEach(btn => btn.classList.remove('rest-btn-pulsing'));
-            activeRestBtnId = null;
-        }
-
-        function resetTimer() {
-            clearInterval(countdown);
-            isRunning = false;
-            timeLeft = selectedInterval;
-            document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
-            document.getElementById('timerBtn').textContent = "Start";
-            document.getElementById('inlineRestTimer').classList.remove('flash-active');
-            clearRestBtnPulse();
-        }
-
-        function triggerTimerAlert() {
-            const timerEl = document.getElementById('inlineRestTimer');
-            timerEl.classList.remove('flash-active');
-            void timerEl.offsetWidth; 
-            timerEl.classList.add('flash-active');
-            clearRestBtnPulse();
-
-            if (navigator.vibrate) {
-                navigator.vibrate([200, 100, 200, 100, 200]);
-            }
-
-            setTimeout(() => {
-                timerEl.classList.remove('flash-active');
-            }, 1500);
-        }
+        // Rest timer logic
+        let timerSeconds = 90;
+        let timerInterval = null;
 
         function toggleTimer() {
-            if (isRunning) {
-                clearInterval(countdown);
-                isRunning = false;
-                document.getElementById('timerBtn').textContent = "Start";
+            const btn = document.getElementById('timerBtn');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.textContent = 'Start';
             } else {
-                isRunning = true;
-                document.getElementById('timerBtn').textContent = "Pause";
-                countdown = setInterval(() => {
-                    if (timeLeft <= 0) {
-                        clearInterval(countdown);
-                        isRunning = false;
-                        document.getElementById('timerBtn').textContent = "Start";
-                        triggerTimerAlert();
+                btn.textContent = 'Pause';
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
                     } else {
-                        timeLeft--;
-                        document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        btn.textContent = 'Start';
+                        const bar = document.getElementById('inlineRestTimer');
+                        if (bar) bar.classList.add('flash-active');
+                        setTimeout(() => { if (bar) bar.classList.remove('flash-active'); }, 2000);
                     }
                 }, 1000);
             }
         }
 
-        function startRestForExercise(seconds, exerciseName) {
-            const targetSeconds = seconds || 90;
-            selectedInterval = targetSeconds;
-            
-            clearInterval(countdown);
-            clearRestBtnPulse();
-            document.getElementById('inlineRestTimer').classList.remove('flash-active');
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = 90;
+            updateTimerDisplay();
+            const btn = document.getElementById('timerBtn');
+            if (btn) btn.textContent = 'Start';
+        }
 
-            if (exerciseName) {
-                activeRestBtnId = `restBtn-${CSS.escape(exerciseName)}`;
-                const btn = document.getElementById(activeRestBtnId);
-                if (btn) btn.classList.add('rest-btn-pulsing');
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const display = document.getElementById('timerDisplay');
+            if (display) display.textContent = formatted;
+        }
+
+        function startRestForExercise(restSec, exerciseName) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timerSeconds = restSec;
+            updateTimerDisplay();
+
+            const restBtn = document.getElementById(`restBtn-${CSS.escape(exerciseName)}`);
+            if (restBtn) {
+                restBtn.classList.add('rest-btn-pulsing');
             }
 
-            timeLeft = targetSeconds;
-            document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
-            
-            isRunning = true;
-            document.getElementById('timerBtn').textContent = "Pause";
-            
-            countdown = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    isRunning = false;
-                    document.getElementById('timerBtn').textContent = "Start";
-                    triggerTimerAlert();
+            const mainBtn = document.getElementById('timerBtn');
+            if (mainBtn) mainBtn.textContent = 'Pause';
+
+            timerInterval = setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    updateTimerDisplay();
                 } else {
-                    timeLeft--;
-                    document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    if (mainBtn) mainBtn.textContent = 'Start';
+                    if (restBtn) restBtn.classList.remove('rest-btn-pulsing');
+                    const bar = document.getElementById('inlineRestTimer');
+                    if (bar) bar.classList.add('flash-active');
+                    setTimeout(() => { if (bar) bar.classList.remove('flash-active'); }, 2000);
                 }
             }, 1000);
         }
-
-        // Recalculate timer immediately when tab regains focus or visibility changes
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden && isWorkoutTimerRunning && workoutStartTime) {
-                elapsedWorkoutSeconds = Math.floor((Date.now() - workoutStartTime) / 1000);
-                updateRunningTimerDisplay();
-            }
-        });
 
         window.onload = () => {
             fetchZenQuote();
             checkSessionSafeguardRestore();
             populateBiometricsFromHistory();
-            renderHistoryTable();
         };
     </script>
 </body>

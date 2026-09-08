@@ -1458,8 +1458,8 @@
 
         let currentActiveRoutine = null;
         let activeWorkoutState = {};
-        let workoutStartTime = null;
         let elapsedWorkoutSeconds = 0;
+        let workoutStartTime = null;
         let isWorkoutTimerRunning = false;
         let runningTimerInterval = null;
 
@@ -1592,6 +1592,7 @@
                     routine: currentActiveRoutine,
                     state: activeWorkoutState,
                     elapsedSeconds: elapsedWorkoutSeconds,
+                    workoutStartTime: workoutStartTime,
                     isTimerRunning: isWorkoutTimerRunning
                 };
                 sessionStorage.setItem('active_session_safeguard', JSON.stringify(sessionData));
@@ -1609,6 +1610,7 @@
                         currentActiveRoutine = data.routine;
                         activeWorkoutState = data.state;
                         elapsedWorkoutSeconds = data.elapsedSeconds || 0;
+                        workoutStartTime = data.workoutStartTime || null;
                         isWorkoutTimerRunning = false;
 
                         document.getElementById('workoutSelector').style.display = 'none';
@@ -2091,6 +2093,7 @@
             currentActiveRoutine = routineName;
             activeWorkoutState = {};
             elapsedWorkoutSeconds = 0;
+            workoutStartTime = null;
             isWorkoutTimerRunning = false;
 
             sessionStorage.removeItem('active_session_safeguard');
@@ -2117,11 +2120,18 @@
                 clearInterval(runningTimerInterval);
                 runningTimerInterval = null;
                 isWorkoutTimerRunning = false;
+                workoutStartTime = null;
             } else {
-                // Start / Resume timer
+                // Start / Resume timer using absolute time differences
                 isWorkoutTimerRunning = true;
+                workoutStartTime = Date.now() - (elapsedWorkoutSeconds * 1000);
+                
+                // Update immediately and then interval handle UI updates
+                elapsedWorkoutSeconds = Math.floor((Date.now() - workoutStartTime) / 1000);
+                updateRunningTimerDisplay();
+
                 runningTimerInterval = setInterval(() => {
-                    elapsedWorkoutSeconds++;
+                    elapsedWorkoutSeconds = Math.floor((Date.now() - workoutStartTime) / 1000);
                     updateRunningTimerDisplay();
                     saveSessionSafeguard();
                 }, 1000);
@@ -2154,6 +2164,7 @@
             clearInterval(runningTimerInterval);
             runningTimerInterval = null;
             isWorkoutTimerRunning = false;
+            workoutStartTime = null;
             updateWorkoutTimerButton();
         }
 
@@ -2525,6 +2536,7 @@
             currentActiveRoutine = null;
             activeWorkoutState = {};
             elapsedWorkoutSeconds = 0;
+            workoutStartTime = null;
             stopWorkoutTimer();
             resetTimer();
 
@@ -2814,6 +2826,14 @@
                 }
             }, 1000);
         }
+
+        // Recalculate timer immediately when tab regains focus or visibility changes
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden && isWorkoutTimerRunning && workoutStartTime) {
+                elapsedWorkoutSeconds = Math.floor((Date.now() - workoutStartTime) / 1000);
+                updateRunningTimerDisplay();
+            }
+        });
 
         window.onload = () => {
             fetchZenQuote();

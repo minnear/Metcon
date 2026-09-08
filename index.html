@@ -936,6 +936,17 @@
             font-size: 0.7rem;
         }
 
+        .workload-select-filter {
+            background: #121214;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
         .empty-history {
             text-align: center;
             color: var(--text-secondary);
@@ -1260,10 +1271,18 @@
     <div id="viewHistory" class="view-section">
         <div class="chart-container">
             <h3>Progress & Performance Trends</h3>
+            <select id="workloadFilter" class="workload-select-filter" onchange="renderHistoryTable()">
+                <option value="ALL">All Workloads (Combined)</option>
+                <option value="Upper Body Push">Upper Body Push Workout</option>
+                <option value="Upper Body Pull">Upper Body Pull Workout</option>
+                <option value="Lower Body">Lower Body Workout</option>
+                <option value="Golf Flexibility">Golf Flexibility Workout</option>
+            </select>
             <table class="history-table">
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Workload</th>
                         <th>Volume</th>
                         <th>Density</th>
                         <th>Trend</th>
@@ -1467,12 +1486,15 @@
          * Calculates volume, duration, work rate, and trend badges upon saving a session.
          * @param {Array} dynamicSets - Array of set objects: [{ reps: 10, weight: 135 }, ...]
          * @param {number} durationMinutes - Total duration of session in minutes.
+         * @param {string} routineName - Routine workload type name
          * @returns {Object} Complete analyzed session object
          */
-        function saveWorkoutSession(dynamicSets, durationMinutes) {
+        function saveWorkoutSession(dynamicSets, durationMinutes, routineName) {
           // 1. Sum Total Volume
           const totalVolume = dynamicSets.reduce((sum, set) => {
-            return sum + (Number(set.reps) * Number(set.weight));
+            const parsedReps = parseFloat(set.reps) || 0;
+            const parsedWeight = parseFloat(set.weight) || 0;
+            return sum + (parsedReps * parsedWeight);
           }, 0);
 
           // 2. Compute Density Index / Work Rate (lbs/min)
@@ -1480,12 +1502,13 @@
             ? parseFloat((totalVolume / durationMinutes).toFixed(2)) 
             : 0;
 
-          // 3. Evaluate Performance Against 4-Session Rolling Average
-          const { trendBadge, rollingAvg } = calculateTrend(totalVolume);
+          // 3. Evaluate Performance Against 4-Session Rolling Average for SPECIFIC WORKLOAD
+          const { trendBadge, rollingAvg } = calculateTrend(totalVolume, routineName);
 
           const sessionData = {
             id: Date.now(),
             timestamp: new Date().toISOString(),
+            routine: routineName,
             totalVolume,
             durationMinutes,
             densityIndex,
@@ -1502,13 +1525,16 @@
         }
 
         /**
-         * Computes directional progress badge based on 4-session rolling average window.
+         * Computes directional progress badge based on 4-session rolling average window per workload.
          * @param {number} currentVolume 
+         * @param {string} routineName 
          * @returns {Object} Badge string and calculated average
          */
-        function calculateTrend(currentVolume) {
-          // Take up to the last 4 completed sessions prior to this one
-          const recentSessions = workoutHistory.slice(0, 4);
+        function calculateTrend(currentVolume, routineName) {
+          // Take up to the last 4 completed sessions of this SPECIFIC WORKLOAD prior to this one
+          const recentSessions = workoutHistory
+            .filter(s => !routineName || s.routine === routineName)
+            .slice(0, 4);
 
           if (recentSessions.length === 0) {
             return { trendBadge: '⚪ ➡️', rollingAvg: currentVolume };
@@ -1529,18 +1555,29 @@
         }
 
         /**
-         * Renders the session history table with badges and density metrics.
+         * Renders the session history table filtered by workload with badges and density metrics.
          */
         function renderHistoryTable() {
           const tableBody = document.getElementById('history-table-body');
+          const filterVal = document.getElementById('workloadFilter') ? document.getElementById('workloadFilter').value : 'ALL';
           if (!tableBody) return;
 
-          tableBody.innerHTML = workoutHistory.map(session => `
+          const filteredSessions = filterVal === 'ALL' 
+            ? workoutHistory 
+            : workoutHistory.filter(s => s.routine === filterVal);
+
+          if (filteredSessions.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-secondary);">No history found for selected workload.</td></tr>`;
+            return;
+          }
+
+          tableBody.innerHTML = filteredSessions.map(session => `
             <tr>
               <td>${new Date(session.timestamp).toLocaleDateString()}</td>
+              <td style="color:var(--accent); font-weight:600;">${session.routine || 'General'}</td>
               <td><strong>${session.totalVolume.toLocaleString()}</strong> lbs</td>
               <td>${session.densityIndex} lbs/min</td>
-              <td><span title="4-Session Avg: ${session.rollingAvg} lbs">${session.trendBadge}</span></td>
+              <td><span title="4-Session Workload Avg: ${session.rollingAvg} lbs">${session.trendBadge}</span></td>
             </tr>
           `).join('');
         }
@@ -2248,6 +2285,20 @@
             }
         }
 
+        function adjustExerciseReps(exerciseName, delta) {
+            const repsInput = document.getElementById(`reps-${CSS.escape(exerciseName)}`);
+            if (repsInput) {
+                let currentVal = parseFloat(repsInput.value);
+                if (isNaN(currentVal)) {
+                    // Try parsing numbers out of strings like "10/side" or "8-10"
+                    const match = repsInput.value.match(/\d+/);
+                    currentVal = match ? parseFloat(match[0]) : 0;
+                }
+                const newVal = Math.max(0, currentVal + delta);
+                repsInput.value = newVal;
+            }
+        }
+
         function generateExerciseCardHtml(ex) {
             if (!activeWorkoutState[ex.name]) {
                 activeWorkoutState[ex.name] = {
@@ -2291,7 +2342,11 @@
                         </div>
                         <div class="input-group">
                             <label>${inputLabel}</label>
-                            <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
+                            <div class="stepper-input-wrapper">
+                                <button class="stepper-btn" onclick="adjustExerciseReps('${escapedName}', -1)">-1</button>
+                                <input type="text" id="reps-${CSS.escape(ex.name)}" value="${ex.reps}">
+                                <button class="stepper-btn" onclick="adjustExerciseReps('${escapedName}', 1)">+1</button>
+                            </div>
                         </div>
                         <button class="accept-set-btn" onclick="acceptSet('${escapedName}', '${unitLabel}')" title="Log Set">✓</button>
                         <button class="trigger-rest-btn" id="restBtn-${CSS.escape(ex.name)}" onclick="startRestForExercise(${restSeconds}, '${escapedName}')" title="Start ${restSeconds}s Rest">💤</button>
@@ -2510,8 +2565,8 @@
                 }
             }
 
-            // Perform calculations and log to the progress & trend tracker
-            saveWorkoutSession(dynamicSets, durationMins);
+            // Perform calculations and log to the progress & trend tracker for this specific workload
+            saveWorkoutSession(dynamicSets, durationMins, currentActiveRoutine);
 
             const workoutRecord = {
                 id: Date.now(),
@@ -2555,6 +2610,10 @@
                 let history = JSON.parse(localStorage.getItem('workout_history') || '[]');
                 history = history.filter(item => item.id !== id);
                 localStorage.setItem('workout_history', JSON.stringify(history));
+
+                workoutHistory = workoutHistory.filter(item => item.id !== id);
+                localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+
                 renderHistoryAndTrends();
             }
         }
